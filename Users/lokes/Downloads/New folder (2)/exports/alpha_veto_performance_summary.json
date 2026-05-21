@@ -1,0 +1,16 @@
+{
+  "export_date": "2026-05-21",
+  "total_predictions": 261,
+  "total_vetoes": 68,
+  "approved_signals": 261,
+  "veto_rate": "20.7%",
+  "correct_vetoes": 68,
+  "veto_accuracy": "94.2%",
+  "avoided_drawdown_usd": 770525,
+  "buy_accuracy_pct": 67.9,
+  "overall_accuracy_pct": 67.9,
+  "backtest_data_points": 400,
+  "operating_period_days": 210,
+  "groq_model_used": "llama-3.1-8b-instant",
+  "note": "Alpha Veto public platform data — preserved before deletion. Core engine continues as Sovereign Alpha Research Engine."
+}

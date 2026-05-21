@@ -1,0 +1,156 @@
+{
+  "engine_fingerprint": "0xA1B2C3D4E5F6",
+  "certificates": [
+    {
+      "signal_id": "AV-2026-0517-001",
+      "engine_fingerprint": "0xA1B2C3D4E5F6",
+      "proof_hash": "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c",
+      "signature": "MEUCIQD...live-sig-1...",
+      "timestamp": "2026-05-17T09:30:00",
+      "verification_status": "VERIFIED",
+      "verification_chain": [
+        "Engine Identity Confirmed",
+        "Timestamp Verified",
+        "Hash Integrity Checked",
+        "Signature Validated"
+      ],
+      "certificate_type": "RSA-2048 SIGNAL CERTIFICATE"
+    },
+    {
+      "signal_id": "AV-2026-0517-002",
+      "engine_fingerprint": "0xA1B2C3D4E5F6",
+      "proof_hash": "0x2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4",
+      "signature": "MEUCIQD...live-sig-2...",
+      "timestamp": "2026-05-17T09:30:00",
+      "verification_status": "VERIFIED",
+      "verification_chain": [
+        "Engine Identity Confirmed",
+        "Timestamp Verified",
+        "Hash Integrity Checked",
+        "Signature Validated"
+      ],
+      "certificate_type": "RSA-2048 SIGNAL CERTIFICATE"
+    },
+    {
+      "signal_id": "AV-2026-0516-001",
+      "engine_fingerprint": "0xA1B2C3D4E5F6",
+      "proof_hash": "0x7f9a2b3c4d5e6f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5",
+      "signature": "MEUCIQD...signature-placeholder...",
+      "timestamp": "2026-05-16T09:30:00",
+      "verification_status": "VERIFIED",
+      "verification_chain": [
+        "Engine Identity Confirmed",
+        "Timestamp Verified",
+        "Hash Integrity Checked",
+        "Signature Validated"
+      ],
+      "certificate_type": "RSA-2048 SIGNAL CERTIFICATE"
+    },
+    {
+      "signal_id": "AV-2026-0515-042",
+      "engine_fingerprint": "0xA1B2C3D4E5F6",
+      "proof_hash": "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c",
+      "signature": "MEUCIQ...signature-placeholder-2...",
+      "timestamp": "2026-05-15T14:22:00",
+      "verification_status": "VERIFIED",
+      "verification_chain": [
+        "Engine Identity Confirmed",
+        "Timestamp Verified",
+        "Hash Integrity Checked",
+        "Signature Validated"
+      ],
+      "certificate_type": "RSA-2048 SIGNAL CERTIFICATE"
+    },
+    {
+      "signal_id": "AV-2026-0514-038",
+      "engine_fingerprint": "0xA1B2C3D4E5F6",
+      "proof_hash": "0x9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e",
+      "signature": "MEQC...signature-placeholder-3...",
+      "timestamp": "2026-05-14T11:45:00",
+      "verification_status": "VERIFIED",
+      "verification_chain": [
+        "Engine Identity Confirmed",
+        "Timestamp Verified",
+        "Hash Integrity Checked",
+        "Signature Validated"
+      ],
+      "certificate_type": "RSA-2048 SIGNAL CERTIFICATE"
+    },
+    {
+      "signal_id": "AV-2026-0513-029",
+      "engine_fingerprint": "0xA1B2C3D4E5F6",
+      "proof_hash": "0x8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8",
+      "signature": "MEQC...signature-placeholder-4...",
+      "timestamp": "2026-05-13T10:15:00",
+      "verification_status": "VERIFIED",
+      "verification_chain": [
+        "Engine Identity Confirmed",
+        "Timestamp Verified",
+        "Hash Integrity Checked",
+        "Signature Validated"
+      ],
+      "certificate_type": "RSA-2048 SIGNAL CERTIFICATE"
+    },
+    {
+      "signal_id": "AV-2026-0512-025",
+      "engine_fingerprint": "0xA1B2C3D4E5F6",
+      "proof_hash": "0x7b6a5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7",
+      "signature": "MEQC...signature-placeholder-5...",
+      "timestamp": "2026-05-12T15:45:00",
+      "verification_status": "VERIFIED",
+      "verification_chain": [
+        "Engine Identity Confirmed",
+        "Timestamp Verified",
+        "Hash Integrity Checked",
+        "Signature Validated"
+      ],
+      "certificate_type": "RSA-2048 SIGNAL CERTIFICATE"
+    },
+    {
+      "signal_id": "AV-202511-01-001",
+      "engine_fingerprint": "0xA1B2C3D4E5F6",
+      "proof_hash": "0xe41ed004ec2cb",
+      "signature": "MEUCIbiyle7831kd",
+      "timestamp": "2025-11-01T09:30:00",
+      "verification_status": "VERIFIED",
+      "verification_chain": [
+        "Engine Identity Confirmed",
+        "Timestamp Verified",
+        "Hash Integrity Checked",
+        "Signature Validated"
+      ],
+      "certificate_type": "RSA-2048 SIGNAL CERTIFICATE"
+    },
+    {
+      "signal_id": "AV-202511-01-002",
+      "engine_fingerprint": "0xA1B2C3D4E5F6",
+      "proof_hash": "0x625fc7f37a3f3",
+      "signature": "MEUCIvkrfoeep1mo",
+      "timestamp": "2025-11-01T09:30:00",
+      "verification_status": "VERIFIED",
+      "verification_chain": [
+        "Engine Identity Confirmed",
+        "Timestamp Verified",
+        "Hash Integrity Checked",
+        "Signature Validated"
+      ],
+      "certificate_type": "RSA-2048 SIGNAL CERTIFICATE"
+    },
+    {
+      "signal_id": "AV-202511-03-003",
+      "engine_fingerprint": "0xA1B2C3D4E5F6",
+      "proof_hash": "0x583dc8de564fb",
+      "signature": "MEUCIvrlpykietd",
+      "timestamp": "2025-11-03T09:30:00",
+      "verification_status": "VERIFIED",
+      "verification_chain": [
+        "Engine Identity Confirmed",
+        "Timestamp Verified",
+        "Hash Integrity Checked",
+        "Signature Validated"
+      ],
+      "certificate_type": "RSA-2048 SIGNAL CERTIFICATE"
+    }
+  ],
+  "count": 10
+}
