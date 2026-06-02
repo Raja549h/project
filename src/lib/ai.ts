@@ -7,6 +7,7 @@ interface ChatMessage {
 
 async function callCloudflareFunction(messages: ChatMessage[], options?: { temperature?: number; maxTokens?: number }): Promise<string | null> {
   try {
+    const { apiKey, model } = useAiConfigStore.getState();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
 
@@ -15,7 +16,8 @@ async function callCloudflareFunction(messages: ChatMessage[], options?: { tempe
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages,
-        model: useAiConfigStore.getState().model,
+        model,
+        apiKey: apiKey || undefined,
         temperature: options?.temperature ?? 0.7,
         maxTokens: options?.maxTokens ?? 1024,
       }),
@@ -26,7 +28,8 @@ async function callCloudflareFunction(messages: ChatMessage[], options?: { tempe
 
     if (!res.ok) return null;
     const data = await res.json();
-    return data.choices?.[0]?.message?.content?.trim() ?? '';
+    const msg = data.choices?.[0]?.message;
+    return msg?.content?.trim() || msg?.reasoning_content?.trim() || '';
   } catch {
     return null;
   }
@@ -56,7 +59,8 @@ async function callDirectAPI(messages: ChatMessage[], options?: { temperature?: 
   }
 
   const data = await res.json();
-  return data.choices?.[0]?.message?.content?.trim() ?? '';
+  const msg = data.choices?.[0]?.message;
+  return msg?.content?.trim() || msg?.reasoning_content?.trim() || '';
 }
 
 export async function chatCompletion(

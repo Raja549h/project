@@ -8,6 +8,7 @@ interface RequestBody {
   model?: string;
   temperature?: number;
   maxTokens?: number;
+  apiKey?: string;
 }
 
 export async function onRequest(context: { request: Request; env: { NVIDIA_API_KEY?: string } }) {
@@ -25,14 +26,14 @@ export async function onRequest(context: { request: Request; env: { NVIDIA_API_K
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: { ...headers, 'Content-Type': 'application/json' } });
   }
 
-  const apiKey = context.env.NVIDIA_API_KEY;
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'NVIDIA_API_KEY not configured in Cloudflare environment variables' }), { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } });
-  }
-
   try {
     const body: RequestBody = await context.request.json();
     const model = body.model || 'meta/llama-3.1-8b-instruct';
+
+    const apiKey = body.apiKey || context.env.NVIDIA_API_KEY;
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: 'No API key provided. Add one in Settings or set NVIDIA_API_KEY env variable.' }), { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } });
+    }
 
     const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
       method: 'POST',

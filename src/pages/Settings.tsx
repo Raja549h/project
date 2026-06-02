@@ -107,8 +107,7 @@ export default function Settings() {
             <p className="text-xs text-gray-400 mb-1">Model</p>
             <select value={model} onChange={e => setModel(e.target.value)} className="bg-surface border border-border rounded-lg p-2 text-sm w-full">
               <option value="meta/llama-3.1-8b-instruct">Llama 3.1 8B (recommended)</option>
-              <option value="deepseek-ai/deepseek-v4-flash">DeepSeek V4 Flash</option>
-              <option value="deepseek-ai/deepseek-v4-pro">DeepSeek V4 Pro</option>
+              <option value="minimaxai/minimax-m2.7">MiniMax M2.7</option>
             </select>
           </div>
         </div>
