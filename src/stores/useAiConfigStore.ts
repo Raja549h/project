@@ -12,7 +12,7 @@ export const useAiConfigStore = create<AiConfigState>()(
   persist(
     (set) => ({
       apiKey: '',
-      model: 'meta/llama-3.1-8b-instruct',
+      model: 'llama-3.1-8b-instant',
       setApiKey: (key) => set({ apiKey: key }),
       setModel: (model) => set({ model }),
     }),
@@ -20,4 +20,4 @@ export const useAiConfigStore = create<AiConfigState>()(
   )
 );
 
-export const NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1';
+export const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';

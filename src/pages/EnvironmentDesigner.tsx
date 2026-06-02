@@ -115,7 +115,7 @@ Provide 3 specific, actionable tips to improve the workspace environment for bet
         ) : recommendation ? (
           <p className="text-sm text-gray-400 whitespace-pre-wrap">{recommendation}</p>
         ) : scores.length > 0 && !hasKey ? (
-          <p className="text-sm text-gray-500">Add your NVIDIA API key in Settings for AI-powered recommendations.</p>
+          <p className="text-sm text-gray-500">Add your Groq API key in Settings for AI-powered recommendations.</p>
         ) : (
           <p className="text-sm text-gray-500">Save your scores above to see recommendations.</p>
         )}

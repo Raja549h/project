@@ -110,7 +110,7 @@ Provide an encouraging, insightful assessment and 1-2 focus areas for next year.
         ) : aiSummary ? (
           <p className="text-sm text-gray-400">{aiSummary}</p>
         ) : (
-          <p className="text-sm text-gray-500">Add your NVIDIA API key in Settings to get an AI-generated yearly summary.</p>
+          <p className="text-sm text-gray-500">Add your Groq API key in Settings to get an AI-generated yearly summary.</p>
         )}
       </div>
 

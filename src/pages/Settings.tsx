@@ -81,7 +81,7 @@ export default function Settings() {
       <div className="bg-card p-4 rounded-xl border border-border">
         <div className="flex items-center gap-2 mb-3">
           <Key size={16} className="text-intelligence" />
-          <h2 className="text-sm font-semibold text-gray-300">NVIDIA AI API Configuration</h2>
+          <h2 className="text-sm font-semibold text-gray-300">Groq AI Configuration</h2>
         </div>
         <div className="space-y-3">
           <div>
@@ -93,7 +93,7 @@ export default function Settings() {
                   value={keyInput}
                   onChange={e => setKeyInput(e.target.value)}
                   className="w-full bg-surface border border-border rounded-lg p-2 text-sm outline-none pr-10"
-                  placeholder="nvapi-..."
+                  placeholder="gsk_..."
                 />
                 <button onClick={() => setShowKey(!showKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
                   {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -106,8 +106,8 @@ export default function Settings() {
           <div>
             <p className="text-xs text-gray-400 mb-1">Model</p>
             <select value={model} onChange={e => setModel(e.target.value)} className="bg-surface border border-border rounded-lg p-2 text-sm w-full">
-              <option value="meta/llama-3.1-8b-instruct">Llama 3.1 8B (recommended)</option>
-              <option value="minimaxai/minimax-m2.7">MiniMax M2.7</option>
+              <option value="llama-3.1-8b-instant">Llama 3.1 8B (fast)</option>
+              <option value="llama-3.3-70b-versatile">Llama 3.3 70B (powerful)</option>
             </select>
           </div>
         </div>

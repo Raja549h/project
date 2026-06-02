@@ -1,4 +1,4 @@
-import { useAiConfigStore, NVIDIA_BASE_URL } from '@/stores/useAiConfigStore';
+import { useAiConfigStore, GROQ_BASE_URL } from '@/stores/useAiConfigStore';
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -39,7 +39,7 @@ async function callDirectAPI(messages: ChatMessage[], options?: { temperature?: 
   const { apiKey, model } = useAiConfigStore.getState();
   if (!apiKey) throw new Error('API key not configured. Add it in Settings.');
 
-  const res = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
+  const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ async function callDirectAPI(messages: ChatMessage[], options?: { temperature?: 
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`NVIDIA API error (${res.status}): ${err}`);
+    throw new Error(`Groq API error (${res.status}): ${err}`);
   }
 
   const data = await res.json();

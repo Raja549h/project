@@ -112,7 +112,7 @@ export default function AiCoach() {
             <Bot size={40} className="mx-auto mb-2 text-intelligence/40" />
             <p className="text-sm">Ask me anything about your life system</p>
             {!apiKey && (
-              <p className="text-xs text-fitness mt-2">Go to Settings to add your NVIDIA API key</p>
+              <p className="text-xs text-fitness mt-2">Go to Settings to add your Groq API key</p>
             )}
           </div>
         )}
