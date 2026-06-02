@@ -1,67 +1,127 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useDeepWorkStore, type DeepWorkSession } from '@/stores/useDeepWorkStore';
-import { useUserStore } from '@/stores/useUserStore';
-import { Play, Pause, RotateCcw, Plus } from 'lucide-react';
+import { Play, Pause, RotateCcw } from 'lucide-react';
 
 function PomodoroTimer() {
-  const [minutes, setMinutes] = useState(25);
-  const [seconds, setSeconds] = useState(0);
+  const [display, setDisplay] = useState('25:00');
   const [isActive, setIsActive] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
   const [focusScore, setFocusScore] = useState(7);
+  const [duration, setDuration] = useState(25);
+
+  const endTimeRef = useRef<number>(0);
+  const durationRef = useRef<number>(25 * 60 * 1000);
   const intervalRef = useRef<number | null>(null);
+  const wasActiveRef = useRef(false);
+
+  const tick = useCallback(() => {
+    if (!endTimeRef.current) return;
+    const remaining = Math.max(0, endTimeRef.current - Date.now());
+    const totalSec = Math.ceil(remaining / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    setDisplay(`${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+
+    if (remaining <= 0) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      setIsActive(false);
+      endTimeRef.current = 0;
+      setDisplay('00:00');
+
+      if (!isBreak) {
+        useDeepWorkStore.getState().addSession({
+          date: new Date().toISOString().split('T')[0],
+          duration: durationRef.current / 60000 / 60,
+          focusScore,
+          notes: '',
+        });
+      }
+    }
+  }, [isBreak, focusScore]);
 
   useEffect(() => {
     if (isActive) {
-      intervalRef.current = setInterval(() => {
-        if (seconds === 0) {
-          if (minutes === 0) {
-            clearInterval(intervalRef.current!);
-            setIsActive(false);
-            const durationHours = isBreak ? 0 : 25 / 60;
-            if (!isBreak) {
-              useDeepWorkStore.getState().addSession({
-                date: new Date().toISOString().split('T')[0],
-                duration: durationHours,
-                focusScore,
-                notes: '',
-              });
-            }
-          } else {
-            setMinutes(m => m - 1);
-            setSeconds(59);
-          }
-        } else {
-          setSeconds(s => s - 1);
-        }
-      }, 1000);
+      if (!endTimeRef.current) {
+        endTimeRef.current = Date.now() + durationRef.current;
+      }
+      intervalRef.current = setInterval(tick, 200);
     } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isActive, minutes, seconds, isBreak, focusScore]);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isActive, tick]);
+
+  const start = () => {
+    durationRef.current = duration * 60 * 1000;
+    endTimeRef.current = Date.now() + durationRef.current;
+    setIsActive(true);
+  };
+
+  const pause = () => {
+    const remaining = Math.max(0, endTimeRef.current - Date.now());
+    durationRef.current = remaining;
+    endTimeRef.current = 0;
+    setIsActive(false);
+  };
 
   const reset = () => {
-    setMinutes(25);
-    setSeconds(0);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = null;
+    endTimeRef.current = 0;
+    durationRef.current = duration * 60 * 1000;
     setIsActive(false);
+    setDisplay(`${String(duration).padStart(2, '0')}:00`);
+  };
+
+  const toggleBreak = () => {
+    reset();
+    setIsBreak(b => !b);
   };
 
   return (
     <div className="bg-card p-6 rounded-xl border border-border text-center">
       <h2 className="text-lg font-semibold mb-1">{isBreak ? 'Break Time' : 'Focus Session'}</h2>
       <p className="text-xs text-gray-500 mb-4">{isBreak ? 'Rest and recharge' : 'Stay in the zone'}</p>
-      <div className="text-6xl font-mono text-deep mb-4">
-        {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+
+      {!isActive && !endTimeRef.current && (
+        <div className="flex justify-center gap-2 mb-4">
+          {[15, 25, 30, 45, 60].map(m => (
+            <button
+              key={m}
+              onClick={() => { setDuration(m); setDisplay(`${String(m).padStart(2, '0')}:00`); durationRef.current = m * 60 * 1000; }}
+              className={`px-3 py-1 text-xs rounded-lg ${duration === m ? 'bg-deep text-white' : 'bg-surface text-gray-400 hover:text-gray-300'}`}
+            >
+              {m}m
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="text-6xl font-mono text-deep mb-4 tabular-nums">
+        {display}
       </div>
+
       <div className="flex justify-center gap-3 mb-4">
-        <button onClick={() => setIsActive(!isActive)} className="p-3 bg-deep/20 rounded-full hover:bg-deep/30 transition-colors">
-          {isActive ? <Pause size={20} /> : <Play size={20} />}
-        </button>
+        {!isActive ? (
+          <button onClick={start} className="p-3 bg-deep/20 rounded-full hover:bg-deep/30 transition-colors">
+            <Play size={20} />
+          </button>
+        ) : (
+          <button onClick={pause} className="p-3 bg-xp/20 rounded-full hover:bg-xp/30 transition-colors">
+            <Pause size={20} />
+          </button>
+        )}
         <button onClick={reset} className="p-3 bg-surface rounded-full hover:bg-surface/80 transition-colors">
           <RotateCcw size={20} />
         </button>
       </div>
+
       <div className="flex items-center justify-center gap-2 mb-3">
         <span className="text-xs text-gray-400">Focus Score:</span>
         {[1,2,3,4,5,6,7,8,9,10].map(n => (
@@ -74,10 +134,8 @@ function PomodoroTimer() {
           </button>
         ))}
       </div>
-      <button
-        onClick={() => { setIsBreak(!isBreak); reset(); }}
-        className="text-sm text-gray-400 hover:text-gray-300"
-      >
+
+      <button onClick={toggleBreak} className="text-sm text-gray-400 hover:text-gray-300">
         {isBreak ? 'Switch to Focus' : 'Switch to Break'}
       </button>
     </div>

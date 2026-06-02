@@ -12,7 +12,7 @@ export const useAiConfigStore = create<AiConfigState>()(
   persist(
     (set) => ({
       apiKey: '',
-      model: 'nvidia/llama-3.1-nemotron-70b-instruct',
+      model: 'meta/llama-3.1-8b-instruct',
       setApiKey: (key) => set({ apiKey: key }),
       setModel: (model) => set({ model }),
     }),
