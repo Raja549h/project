@@ -1,12 +1,17 @@
 import { useLifeAuditStore } from '@/stores/useLifeAuditStore';
+import { useAiConfigStore } from '@/stores/useAiConfigStore';
+import { chatCompletion, hasValidKey } from '@/lib/ai';
 import { useState } from 'react';
-import { FileText, Plus } from 'lucide-react';
+import { FileText, Plus, Sparkles } from 'lucide-react';
 
 export default function LifeAudit() {
   const { timeLogs, addTimeLog, getEfficiencyScore, getLifeROI, getWeeklyReport } = useLifeAuditStore();
+  const hasKey = hasValidKey();
   const [productive, setProductive] = useState(6);
   const [wasted, setWasted] = useState(2);
   const [energy, setEnergy] = useState(7);
+  const [recommendation, setRecommendation] = useState('');
+  const [loading, setLoading] = useState(false);
   const efficiency = getEfficiencyScore();
   const lifeROI = getLifeROI();
   const weekly = getWeeklyReport();
@@ -18,6 +23,29 @@ export default function LifeAudit() {
       wastedHours: wasted,
       energyLevel: energy,
     });
+  };
+
+  const generateRecommendation = async () => {
+    setLoading(true);
+    try {
+      const prompt = `Based on this life audit data:
+- Efficiency: ${efficiency}%
+- Life ROI: ${lifeROI}/100
+- Weekly productive hours: ${weekly.productive.toFixed(1)}h
+- Weekly wasted hours: ${weekly.wasted.toFixed(1)}h
+- Weekly efficiency: ${weekly.efficiency}%
+
+Give 2-3 specific, actionable recommendations to improve efficiency and reduce wasted time. Keep it concise.`;
+      const res = await chatCompletion([
+        { role: 'system', content: 'You are a productivity auditor. Give concise, actionable advice.' },
+        { role: 'user', content: prompt },
+      ], { maxTokens: 300 });
+      setRecommendation(res);
+    } catch {
+      setRecommendation('');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,18 +72,32 @@ export default function LifeAudit() {
 
       {timeLogs.length > 0 && (
         <div className="bg-card p-4 rounded-xl border border-border">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Weekly Report</h2>
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-300">Weekly Report</h2>
+            {hasKey && (
+              <button onClick={generateRecommendation} disabled={loading} className="text-xs px-2 py-1 bg-intelligence/20 text-intelligence rounded-lg">
+                <Sparkles size={12} className="inline mr-1" />AI Recommendations
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-4 text-sm mb-3">
             <div><span className="text-gray-400">Productive Hours</span><p className="font-semibold text-business">{weekly.productive.toFixed(1)}h</p></div>
             <div><span className="text-gray-400">Wasted Hours</span><p className="font-semibold text-fitness">{weekly.wasted.toFixed(1)}h</p></div>
             <div><span className="text-gray-400">Efficiency</span><p className="font-semibold text-xp">{weekly.efficiency}%</p></div>
           </div>
+          {loading && <p className="text-sm text-gray-400 animate-pulse">Analyzing your data...</p>}
+          {recommendation && (
+            <div className="bg-surface p-3 rounded-lg text-sm text-gray-400">
+              <p className="text-intelligence font-medium mb-1">AI Recommendations:</p>
+              <p className="whitespace-pre-wrap">{recommendation}</p>
+            </div>
+          )}
         </div>
       )}
 
       <div className="bg-card p-4 rounded-xl border border-border">
         <h2 className="text-sm font-semibold text-gray-300 mb-3">Log Today's Time</h2>
-        <div className="flex gap-3 items-end">
+        <div className="flex gap-3 items-end flex-wrap">
           <div>
             <p className="text-xs text-gray-400 mb-1">Productive Hours</p>
             <input type="number" value={productive} onChange={e => setProductive(Number(e.target.value))} className="w-24 bg-surface border border-border rounded-lg p-2 text-sm" min={0} max={24} />
@@ -73,26 +115,6 @@ export default function LifeAudit() {
           </button>
         </div>
       </div>
-
-      {timeLogs.length > 0 && (
-        <div className="bg-card p-4 rounded-xl border border-border">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Recent Logs</h2>
-          <div className="space-y-1">
-            {[...timeLogs].reverse().slice(0, 10).map(log => (
-              <div key={log.date} className="flex justify-between text-sm p-2 bg-surface rounded-lg">
-                <span className="text-gray-300">{log.date}</span>
-                <div className="text-gray-400">
-                  <span className="text-business">{log.productiveHours}h productive</span>
-                  {' | '}
-                  <span className="text-fitness">{log.wastedHours}h wasted</span>
-                  {' | '}
-                  <span>Energy: {log.energyLevel}/10</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

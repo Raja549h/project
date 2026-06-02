@@ -3,8 +3,10 @@ import { useDeepWorkStore } from '@/stores/useDeepWorkStore';
 import { useHabitStore } from '@/stores/useHabitStore';
 import { useJeeStore } from '@/stores/useJeeStore';
 import { useProjectStore } from '@/stores/useProjectStore';
-import { useState } from 'react';
-import { FileText } from 'lucide-react';
+import { useAiConfigStore } from '@/stores/useAiConfigStore';
+import { chatCompletion, hasValidKey } from '@/lib/ai';
+import { useState, useEffect } from 'react';
+import { FileText, Sparkles } from 'lucide-react';
 
 export default function YearlyReview() {
   const { level, xp, currentStreak } = useUserStore();
@@ -12,7 +14,10 @@ export default function YearlyReview() {
   const habits = useHabitStore(s => s.habits);
   const { physics, chemistry, mathematics } = useJeeStore();
   const projects = useProjectStore(s => s.projects);
+  const hasKey = hasValidKey();
   const [lessons, setLessons] = useState('');
+  const [aiSummary, setAiSummary] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const totalDW = sessions.reduce((sum, s) => sum + s.duration, 0);
   const totalQs = physics.questionsSolved + chemistry.questionsSolved + mathematics.questionsSolved;
@@ -20,7 +25,34 @@ export default function YearlyReview() {
   const projectCount = projects.length;
   const totalMilestones = projects.reduce((sum, p) => sum + p.milestonesCompleted, 0);
 
-  const aiSummary = `This year you reached Level ${level} with ${xp.toLocaleString()} total XP. You completed ${totalDW.toFixed(1)} hours of deep work, solved ${totalQs} JEE questions, and maintained a best streak of ${bestStreak} days. You worked on ${projectCount} projects with ${totalMilestones} milestones completed. Focus on consistency and deep work to accelerate next year.`;
+  const generateSummary = async () => {
+    setLoading(true);
+    const prompt = `Generate a 3-4 sentence yearly review summary for a LifeOS ASCEND user with these stats:
+- Level ${level}, ${xp} total XP
+- ${totalDW.toFixed(1)} hours of deep work
+- ${totalQs} JEE questions solved
+- Best streak: ${bestStreak} days
+- ${projectCount} projects completed with ${totalMilestones} milestones
+- Current streak: ${currentStreak} days
+
+Provide an encouraging, insightful assessment and 1-2 focus areas for next year.`;
+
+    try {
+      const summary = await chatCompletion([
+        { role: 'system', content: 'You are a life coach writing a yearly review. Be encouraging and specific.' },
+        { role: 'user', content: prompt },
+      ], { maxTokens: 300 });
+      setAiSummary(summary);
+    } catch {
+      setAiSummary('');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (hasKey && !aiSummary) generateSummary();
+  }, []);
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -65,8 +97,21 @@ export default function YearlyReview() {
       </div>
 
       <div className="bg-card p-4 rounded-xl border border-border">
-        <h2 className="text-sm font-semibold text-gray-300 mb-3">AI Summary</h2>
-        <p className="text-sm text-gray-400">{aiSummary}</p>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-300">AI Summary</h2>
+          {hasKey && (
+            <button onClick={generateSummary} disabled={loading} className="text-xs px-2 py-1 bg-intelligence/20 text-intelligence rounded-lg">
+              <Sparkles size={12} className="inline mr-1" />{loading ? 'Generating...' : 'Regenerate'}
+            </button>
+          )}
+        </div>
+        {loading ? (
+          <p className="text-sm text-gray-400 animate-pulse">Generating your yearly summary...</p>
+        ) : aiSummary ? (
+          <p className="text-sm text-gray-400">{aiSummary}</p>
+        ) : (
+          <p className="text-sm text-gray-500">Add your NVIDIA API key in Settings to get an AI-generated yearly summary.</p>
+        )}
       </div>
 
       <div className="bg-card p-4 rounded-xl border border-border">

@@ -1,30 +1,47 @@
 import { useEnvironmentStore } from '@/stores/useEnvironmentStore';
+import { useAiConfigStore } from '@/stores/useAiConfigStore';
+import { chatCompletion, hasValidKey } from '@/lib/ai';
 import { useState } from 'react';
-import { Palette, Upload } from 'lucide-react';
+import { Palette, Upload, Sparkles } from 'lucide-react';
 
 export default function EnvironmentDesigner() {
   const { scores, addScore, getLatest } = useEnvironmentStore();
+  const hasKey = hasValidKey();
   const [focusScore, setFocusScore] = useState(70);
   const [environmentScore, setEnvironmentScore] = useState(65);
   const [sleepScore, setSleepScore] = useState(75);
   const [fileName, setFileName] = useState('');
+  const [recommendation, setRecommendation] = useState('');
+  const [loading, setLoading] = useState(false);
   const latest = getLatest();
 
   const handleAnalyze = () => {
     addScore({ focusScore, environmentScore, sleepScore });
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) setFileName(e.target.files[0].name);
+  const generateRecommendation = async () => {
+    setLoading(true);
+    try {
+      const prompt = `Given environment scores:
+- Focus readiness: ${focusScore}/100
+- Environment quality: ${environmentScore}/100
+- Sleep environment: ${sleepScore}/100
+
+Provide 3 specific, actionable tips to improve the workspace environment for better focus and sleep. Be practical and concise.`;
+      const res = await chatCompletion([
+        { role: 'system', content: 'You are an environment design consultant. Give practical workspace optimization advice.' },
+        { role: 'user', content: prompt },
+      ], { maxTokens: 300 });
+      setRecommendation(res);
+    } catch {
+      setRecommendation('');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getRecommendation = () => {
-    const recs: string[] = [];
-    if (focusScore < 50) recs.push('Reduce clutter in your workspace.');
-    if (environmentScore < 50) recs.push('Improve lighting and add plants.');
-    if (sleepScore < 50) recs.push('Optimize bedroom: dark curtains, cool temperature.');
-    if (recs.length === 0) recs.push('Your environment looks good! Maintain your setup.');
-    return recs.join(' ');
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) setFileName(e.target.files[0].name);
   };
 
   return (
@@ -84,12 +101,25 @@ export default function EnvironmentDesigner() {
         </div>
       </div>
 
-      {scores.length > 0 && (
-        <div className="bg-card p-4 rounded-xl border border-border">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Recommendations</h2>
-          <p className="text-sm text-gray-400">{getRecommendation()}</p>
+      <div className="bg-card p-4 rounded-xl border border-border">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-300">Recommendations</h2>
+          {hasKey && (
+            <button onClick={generateRecommendation} disabled={loading} className="text-xs px-2 py-1 bg-intelligence/20 text-intelligence rounded-lg">
+              <Sparkles size={12} className="inline mr-1" />{loading ? 'Generating...' : 'AI Suggestions'}
+            </button>
+          )}
         </div>
-      )}
+        {loading ? (
+          <p className="text-sm text-gray-400 animate-pulse">Analyzing your environment...</p>
+        ) : recommendation ? (
+          <p className="text-sm text-gray-400 whitespace-pre-wrap">{recommendation}</p>
+        ) : scores.length > 0 && !hasKey ? (
+          <p className="text-sm text-gray-500">Add your NVIDIA API key in Settings for AI-powered recommendations.</p>
+        ) : (
+          <p className="text-sm text-gray-500">Save your scores above to see recommendations.</p>
+        )}
+      </div>
     </div>
   );
 }

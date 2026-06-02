@@ -1,61 +1,58 @@
 import { useAiCoachStore, type Message } from '@/stores/useAiCoachStore';
-import { useUserStore } from '@/stores/useUserStore';
-import { useHabitStore } from '@/stores/useHabitStore';
-import { useDeepWorkStore } from '@/stores/useDeepWorkStore';
+import { useAiConfigStore } from '@/stores/useAiConfigStore';
+import { chatCompletion, hasValidKey } from '@/lib/ai';
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, Trash2 } from 'lucide-react';
+import { Send, Bot, Trash2, Key } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const COACH_MODES = ['Coach', 'Planner', 'Motivator', 'Analyst'] as const;
 
-function generateResponse(userMessage: string, mode: string): string {
-  const { level, xp, lifeScore, currentStreak } = useUserStore.getState();
-  const habits = useHabitStore.getState().habits;
-  const dwSessions = useDeepWorkStore.getState().sessions;
-
-  const templates: Record<string, string[]> = {
-    Coach: [
-      `Based on your stats (Level ${level}, ${xp} XP), I recommend focusing on your habits. You have ${habits.length} habits set up. Try to maintain your ${currentStreak}-day streak.`,
-      `Great progress! Your life score is ${lifeScore}/100. To improve, consider adding more deep work sessions. You've done ${dwSessions.length} sessions total.`,
-      `I notice you're level ${level}. The next milestone is level ${level + 1}. Stay consistent with your daily habits.`,
-    ],
-    Planner: [
-      `Here's your suggested plan: 1) Morning habits (30min), 2) Deep work session (1hr), 3) Study session (2hrs), 4) Workout (30min), 5) Evening review (15min).`,
-      `For this week: Focus on building a consistent sleep schedule, complete all daily habits, and aim for 5 deep work sessions.`,
-      `Monthly suggestion: Increase your study hours gradually. Focus on your weak topics in JEE prep.`,
-    ],
-    Motivator: [
-      `You're doing amazing! Level ${level} with ${xp} XP shows real dedication. Keep pushing forward! 🔥`,
-      `Remember why you started. Every habit completed, every question solved brings you closer to your goals.`,
-      `A ${currentStreak}-day streak is impressive! Imagine where you'll be in 30 days if you keep this up.`,
-    ],
-    Analyst: [
-      `Analysis: Your habit completion affects your life score. Deep work sessions correlate with XP growth. Focus on consistency.`,
-      `Looking at your data: ${habits.filter(h => h.completedDates.includes(new Date().toISOString().split('T')[0])).length}/${habits.length} habits done today. ${dwSessions.length} total deep work sessions.`,
-      `Trend: ${currentStreak > 0 ? 'Positive - you are on a streak' : 'Room for improvement - start a new streak today'}. Life score: ${lifeScore}/100.`,
-    ],
-  };
-
-  const modeTemplates = templates[mode] || templates.Coach;
-  return modeTemplates[Math.floor(Math.random() * modeTemplates.length)];
-}
+const SYSTEM_PROMPTS: Record<string, string> = {
+  Coach: `You are a life coach for LifeOS ASCEND, a gamified life management system. Help the user improve their habits, productivity, and life score. Be practical, encouraging, and specific. Keep responses concise (2-4 sentences).`,
+  Planner: `You are a productivity planner for LifeOS ASCEND. Create actionable daily/weekly plans based on the user's goals and current stats. Be specific with time blocks and priorities. Keep responses concise.`,
+  Motivator: `You are a high-energy motivation coach. Inspire the user to take action, maintain streaks, and push through resistance. Use occasional emojis. Keep responses punchy and powerful.`,
+  Analyst: `You are a data analyst for LifeOS ASCEND. Analyze the user's stats, identify patterns, and suggest data-driven improvements. Be objective and specific. Keep responses concise.`,
+};
 
 export default function AiCoach() {
   const { messages, mode, addMessage, setMode, clearConversation } = useAiCoachStore();
+  const hasKey = hasValidKey();
+  const apiKey = useAiConfigStore(s => s.apiKey);
   const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, loading]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    addMessage('user', input.trim());
-    setTimeout(() => {
-      const response = generateResponse(input.trim(), mode);
-      addMessage('coach', response);
-    }, 500);
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
+    if (!hasKey) {
+      navigate('/settings');
+      return;
+    }
+
+    const userMsg = input.trim();
     setInput('');
+    addMessage('user', userMsg);
+    setLoading(true);
+
+    try {
+      const systemPrompt = SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.Coach;
+      const conversation = [
+        { role: 'system' as const, content: systemPrompt },
+        ...messages.slice(-10).map(m => ({ role: m.role === 'coach' ? 'assistant' as const : 'user' as const, content: m.content })),
+        { role: 'user' as const, content: userMsg },
+      ];
+      const reply = await chatCompletion(conversation, { maxTokens: 512 });
+      addMessage('coach', reply);
+    } catch (err: any) {
+      addMessage('coach', `Error: ${err.message || 'Failed to get response'}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,24 +67,31 @@ export default function AiCoach() {
         </button>
       </div>
 
-      <div className="flex gap-2">
-        {COACH_MODES.map(m => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              mode === m ? 'bg-intelligence/20 text-intelligence' : 'bg-surface text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            {m}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          {COACH_MODES.map(m => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                mode === m ? 'bg-intelligence/20 text-intelligence' : 'bg-surface text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+        {!apiKey && (
+          <button onClick={() => navigate('/settings')} className="text-xs text-fitness flex items-center gap-1">
+            <Key size={12} /> API Key Required
           </button>
-        ))}
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 bg-card rounded-xl border border-border p-4 max-h-[60vh]">
         {messages.map((msg: Message) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] p-3 rounded-xl text-sm ${
+            <div className={`max-w-[80%] p-3 rounded-xl text-sm whitespace-pre-wrap ${
               msg.role === 'user'
                 ? 'bg-deep/20 text-gray-200'
                 : 'bg-surface text-gray-300'
@@ -96,10 +100,20 @@ export default function AiCoach() {
             </div>
           </div>
         ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-surface p-3 rounded-xl text-sm text-gray-400">
+              <span className="animate-pulse">Thinking...</span>
+            </div>
+          </div>
+        )}
         {messages.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             <Bot size={40} className="mx-auto mb-2 text-intelligence/40" />
             <p className="text-sm">Ask me anything about your life system</p>
+            {!apiKey && (
+              <p className="text-xs text-fitness mt-2">Go to Settings to add your NVIDIA API key</p>
+            )}
           </div>
         )}
         <div ref={bottomRef} />
@@ -109,11 +123,16 @@ export default function AiCoach() {
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleSend()}
-          placeholder="Ask your coach..."
-          className="flex-1 bg-surface border border-border rounded-xl p-3 text-sm outline-none focus:border-intelligence/50"
+          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+          placeholder={apiKey ? 'Ask your coach...' : 'Add API key in Settings first...'}
+          disabled={!apiKey}
+          className="flex-1 bg-surface border border-border rounded-xl p-3 text-sm outline-none focus:border-intelligence/50 disabled:opacity-50"
         />
-        <button onClick={handleSend} className="p-3 bg-intelligence/20 text-intelligence rounded-xl hover:bg-intelligence/30">
+        <button
+          onClick={handleSend}
+          disabled={loading || !input.trim()}
+          className="p-3 bg-intelligence/20 text-intelligence rounded-xl hover:bg-intelligence/30 disabled:opacity-40"
+        >
           <Send size={18} />
         </button>
       </div>
