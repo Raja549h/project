@@ -21,6 +21,7 @@ export const useAiConfigStore = create<AiConfigState>()(
     {
       name: 'aiconfig-storage',
       merge: (persisted, current) => {
+        if (!persisted) return current;
         const p = persisted as Record<string, unknown>;
         return {
           ...current,
