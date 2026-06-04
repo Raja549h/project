@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "apk": "npm run build && npx cap sync && cd android && .\\gradlew.bat assembleDebug"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.0",
@@ -18,10 +21,15 @@
     "vite": "^8.0.12"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
     "@hello-pangea/dnd": "^18.0.1",
     "framer-motion": "^12.40.0",
+    "html5-qrcode": "^2.3.8",
     "lucide-react": "^1.17.0",
     "openai": "^6.41.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.6",
     "react-circular-progressbar": "^2.2.0",
     "react-dom": "^19.2.6",
