@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Home, CalendarCheck, BarChart3, TreePine, Brain, GraduationCap,
   Dumbbell, FolderKanban, Bot, FileText, ShieldCheck, Video,
-  Palette, Lock, Settings, Sparkles, Sword, Trophy
+  Palette, Lock, Settings, Sparkles, Sword, Trophy, BookOpen
 } from 'lucide-react';
 
 const navItems = [
@@ -26,6 +26,7 @@ const navItems = [
   { to: '/achievements', icon: Trophy, label: 'Achievements' },
   { to: '/quests', icon: Sparkles, label: 'Quests' },
   { to: '/battle-mode', icon: Sword, label: 'Battle Mode' },
+  { to: '/masters', icon: BookOpen, label: 'UHM-OS Masters' },
   { to: '/yearly-review', icon: FileText, label: 'Yearly Review' },
 ];
 

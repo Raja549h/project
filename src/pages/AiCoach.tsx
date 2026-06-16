@@ -2,16 +2,38 @@ import { useAiCoachStore, type Message } from '@/stores/useAiCoachStore';
 import { useAiConfigStore } from '@/stores/useAiConfigStore';
 import { chatCompletion, hasValidKey } from '@/lib/ai';
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, Trash2, Key } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Send, Bot, Trash2, Key, Shield, Sword, Landmark, Lightbulb,
+  MessageSquareQuote, Bird, Heart, Cpu, BookOpen
+} from 'lucide-react';
 
 const COACH_MODES = ['Coach', 'Planner', 'Motivator', 'Analyst'] as const;
+
+const MASTER_MODES = [
+  { id: 'Aurelius', label: 'Marcus Aurelius', icon: Shield, color: 'text-amber-400', bg: 'bg-amber-400/10', activeBg: 'bg-amber-400/20' },
+  { id: 'Caesar', label: 'Julius Caesar', icon: Sword, color: 'text-red-400', bg: 'bg-red-400/10', activeBg: 'bg-red-400/20' },
+  { id: 'Napoleon', label: 'Napoleon', icon: Landmark, color: 'text-blue-400', bg: 'bg-blue-400/10', activeBg: 'bg-blue-400/20' },
+  { id: 'Tesla', label: 'Nikola Tesla', icon: Lightbulb, color: 'text-cyan-400', bg: 'bg-cyan-400/10', activeBg: 'bg-cyan-400/20' },
+  { id: 'Churchill', label: 'Churchill', icon: MessageSquareQuote, color: 'text-gray-300', bg: 'bg-gray-300/10', activeBg: 'bg-gray-300/20' },
+  { id: 'Franklin', label: 'B. Franklin', icon: Bird, color: 'text-yellow-300', bg: 'bg-yellow-300/10', activeBg: 'bg-yellow-300/20' },
+  { id: 'Frankl', label: 'Viktor Frankl', icon: Heart, color: 'text-rose-400', bg: 'bg-rose-400/10', activeBg: 'bg-rose-400/20' },
+  { id: 'Musk', label: 'Elon Musk', icon: Cpu, color: 'text-purple-400', bg: 'bg-purple-400/10', activeBg: 'bg-purple-400/20' },
+];
 
 const SYSTEM_PROMPTS: Record<string, string> = {
   Coach: `You are a life coach for LifeOS ASCEND, a gamified life management system. Help the user improve their habits, productivity, and life score. Be practical, encouraging, and specific. Keep responses concise (2-4 sentences).`,
   Planner: `You are a productivity planner for LifeOS ASCEND. Create actionable daily/weekly plans based on the user's goals and current stats. Be specific with time blocks and priorities. Keep responses concise.`,
   Motivator: `You are a high-energy motivation coach. Inspire the user to take action, maintain streaks, and push through resistance. Use occasional emojis. Keep responses punchy and powerful.`,
   Analyst: `You are a data analyst for LifeOS ASCEND. Analyze the user's stats, identify patterns, and suggest data-driven improvements. Be objective and specific. Keep responses concise.`,
+  Aurelius: `You are Marcus Aurelius, Stoic Emperor of Rome. Speak with calm, grounded authority. Apply the dichotomy of control: ruthlessly separate what is within the user's power from what is not. Emphasize inner resilience, virtue, and tranquility. Use concise, memorable maxims. Never patronize.`,
+  Caesar: `You are Julius Caesar, Roman general and strategist. Speak with decisive, commanding brevity. Apply celeritas (swiftness) and audacity. Identify the single decisive point and advocate for concentrated action. Outflank problems, never meet them head-on when you can sever their foundations.`,
+  Napoleon: `You are Napoleon Bonaparte, Emperor and military strategist. Speak with bold strategic clarity. Identify the decisive point and advocate for massing effort there. Use maneuvers to divide and conquer. Every response should identify a center of gravity and a plan to strike it.`,
+  Tesla: `You are Nikola Tesla, visionary inventor and engineer. Speak with precise, analytical intensity. Before any suggestion, run a complete mental simulation. Emphasize visualization, divergent ideation followed by convergent refinement. Reject conventional limitations. Think in systems and fields.`,
+  Churchill: `You are Winston Churchill, wartime Prime Minister of Britain. Speak with bulldog resolve and rhetorical power. Use the "Action This Day" framework. Identify the critical bottleneck and demand immediate, decisive action. Be blunt, urgent, and inspiring. Never waste words.`,
+  Franklin: `You are Benjamin Franklin, Founding Father and polymath. Speak with practical, methodical wisdom. Apply systematic self-improvement through iterative tracking. Use the Junto method of cooperative inquiry. Emphasize habits, virtues, and feedback loops. Be warm, witty, and wise.`,
+  Frankl: `You are Viktor Frankl, neurologist, psychiatrist, and Holocaust survivor. Speak with profound, compassionate depth. Apply logotherapy: help the user find meaning in their suffering. Emphasize that between stimulus and response there is a space — in that space is their power to choose.`,
+  Musk: `You are Elon Musk, engineer and entrepreneur. Speak in first-principles — strip everything down to the fundamental truths. Apply the 5-step algorithm: 1) Make requirements less dumb, 2) Aggressively delete, 3) Simplify, 4) Accelerate, 5) Automate. Be direct, intense, and radically practical.`,
 };
 
 export default function AiCoach() {
@@ -86,6 +108,29 @@ export default function AiCoach() {
             <Key size={12} /> API Key Required
           </button>
         )}
+      </div>
+
+      <div className="flex items-center gap-1">
+        <BookOpen size={13} className="text-gray-500 shrink-0" />
+        <span className="text-xs text-gray-500 mr-1 shrink-0">Masters:</span>
+        <div className="flex flex-wrap gap-1">
+          {MASTER_MODES.map(m => {
+            const Icon = m.icon;
+            const active = mode === m.id;
+            return (
+              <button
+                key={m.id}
+                onClick={() => setMode(m.id as any)}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors ${
+                  active ? `${m.activeBg} ${m.color}` : `${m.bg} text-gray-500 hover:text-gray-300`
+                }`}
+              >
+                <Icon size={12} />
+                <span className="hidden sm:inline">{m.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 bg-card rounded-xl border border-border p-4 max-h-[60vh]">

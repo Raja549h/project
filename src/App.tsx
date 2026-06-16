@@ -20,6 +20,7 @@ import Settings from './pages/Settings';
 import Achievements from './pages/Achievements';
 import Quests from './pages/Quests';
 import BattleMode from './pages/BattleMode';
+import Masters from './pages/Masters';
 import { useQuestsStore } from './stores/useQuestsStore';
 
 export default function App() {
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/fitness" element={<FitnessCenter />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/ai-coach" element={<AiCoach />} />
+            <Route path="/masters" element={<Masters />} />
             <Route path="/yearly-review" element={<YearlyReview />} />
             <Route path="/life-audit" element={<LifeAudit />} />
             <Route path="/reputation" element={<Reputation />} />

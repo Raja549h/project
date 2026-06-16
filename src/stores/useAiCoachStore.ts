@@ -8,7 +8,8 @@ export interface Message {
   timestamp: number;
 }
 
-type CoachMode = 'Coach' | 'Planner' | 'Motivator' | 'Analyst';
+type CoachMode = 'Coach' | 'Planner' | 'Motivator' | 'Analyst'
+  | 'Aurelius' | 'Caesar' | 'Napoleon' | 'Tesla' | 'Churchill' | 'Franklin' | 'Frankl' | 'Musk';
 
 interface AiCoachState {
   messages: Message[];
