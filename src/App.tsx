@@ -20,7 +20,6 @@ import Settings from './pages/Settings';
 import Achievements from './pages/Achievements';
 import Quests from './pages/Quests';
 import BattleMode from './pages/BattleMode';
-import QrSync from './pages/QrSync';
 import { useQuestsStore } from './stores/useQuestsStore';
 
 export default function App() {
@@ -57,7 +56,6 @@ export default function App() {
             <Route path="/achievements" element={<Achievements />} />
             <Route path="/quests" element={<Quests />} />
             <Route path="/battle-mode" element={<BattleMode />} />
-            <Route path="/qr-sync" element={<QrSync />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
