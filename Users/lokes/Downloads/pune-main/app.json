@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "Pune RidePulse",
+    "slug": "pune-ridepulse",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./public/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "pune-ridepulse",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.puneridepulse.app",
+      "config": {
+        "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+      },
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": ["uber", "olacabs", "whatsapp", "tel"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.puneridepulse.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "pune-ridepulse", "host": "*", "pathPrefix": "/" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./public/favicon.ico",
+      "output": "single",
+      "name": "Pune RidePulse"
+    },
+    "extra": {
+      "convexUrl": "YOUR_CONVEX_URL"
+    },
+    "plugins": [
+      "expo-linking",
+      "expo-web-browser"
+    ]
+  }
+}
