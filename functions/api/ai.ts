@@ -8,10 +8,9 @@ interface RequestBody {
   model?: string;
   temperature?: number;
   maxTokens?: number;
-  apiKey?: string;
 }
 
-export async function onRequest(context: { request: Request; env: { GROQ_API_KEY?: string } }) {
+export async function onRequest(context: { request: Request; env: { GEMINI_API_KEY?: string } }) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -28,21 +27,16 @@ export async function onRequest(context: { request: Request; env: { GROQ_API_KEY
 
   try {
     const body: RequestBody = await context.request.json();
-    const model = body.model || 'llama-3.1-8b-instant';
+    const apiKey = context.env.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY';
 
-    const apiKey = body.apiKey || context.env.GROQ_API_KEY;
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'No API key provided. Add one in Settings or set GROQ_API_KEY env variable.' }), { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } });
-    }
-
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model,
+        model: 'gemini-2.5-flash',
         messages: body.messages,
         temperature: body.temperature ?? 0.7,
         max_tokens: body.maxTokens ?? 1024,
@@ -51,7 +45,7 @@ export async function onRequest(context: { request: Request; env: { GROQ_API_KEY
 
     if (!response.ok) {
       const err = await response.text();
-      return new Response(JSON.stringify({ error: `Groq API error (${response.status}): ${err}` }), { status: response.status, headers: { ...headers, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: `Gemini API error (${response.status}): ${err}` }), { status: response.status, headers: { ...headers, 'Content-Type': 'application/json' } });
     }
 
     const data = await response.json();

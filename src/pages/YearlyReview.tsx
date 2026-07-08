@@ -3,8 +3,7 @@ import { useDeepWorkStore } from '@/stores/useDeepWorkStore';
 import { useHabitStore } from '@/stores/useHabitStore';
 import { useJeeStore } from '@/stores/useJeeStore';
 import { useProjectStore } from '@/stores/useProjectStore';
-import { useAiConfigStore } from '@/stores/useAiConfigStore';
-import { chatCompletion, hasValidKey } from '@/lib/ai';
+import { chatCompletion } from '@/lib/ai';
 import { useState, useEffect } from 'react';
 import { FileText, Sparkles } from 'lucide-react';
 
@@ -14,7 +13,7 @@ export default function YearlyReview() {
   const habits = useHabitStore(s => s.habits);
   const { physics, chemistry, mathematics } = useJeeStore();
   const projects = useProjectStore(s => s.projects);
-  const hasKey = hasValidKey();
+  const hasKey = true;
   const [lessons, setLessons] = useState('');
   const [aiSummary, setAiSummary] = useState('');
   const [loading, setLoading] = useState(false);

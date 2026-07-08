@@ -2,11 +2,18 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { useUserStore } from './useUserStore';
 
+export interface ChapterDetail {
+  id: string;
+  name: string;
+  weightage: 'High' | 'Medium' | 'Low';
+  nextReviewDate: string; // ISO date string
+}
+
 export interface SubjectProgress {
   questionsSolved: number;
   correct: number;
   studyHours: number;
-  chaptersCompleted: string[];
+  chaptersCompleted: (string | ChapterDetail)[];
   weakTopics: string[];
   strongTopics: string[];
   revisionStatus: number;
@@ -18,7 +25,8 @@ interface JeeState {
   mathematics: SubjectProgress;
   addQuestions: (subject: 'physics' | 'chemistry' | 'mathematics', count: number, correct: number) => void;
   addStudyHours: (subject: 'physics' | 'chemistry' | 'mathematics', hours: number) => void;
-  completeChapter: (subject: 'physics' | 'chemistry' | 'mathematics', chapter: string) => void;
+  completeChapter: (subject: 'physics' | 'chemistry' | 'mathematics', chapter: string, weightage: 'High' | 'Medium' | 'Low') => void;
+  reviewChapter: (subject: 'physics' | 'chemistry' | 'mathematics', chapterId: string, success: boolean) => void;
   getReadiness: () => number;
 }
 
@@ -57,14 +65,39 @@ export const useJeeStore = create<JeeState>()(
         }));
         useUserStore.getState().addXP(Math.round(hours * 15));
       },
-      completeChapter: (subject, chapter) => {
+      completeChapter: (subject, name, weightage = 'Medium') => {
+        const newChapter: ChapterDetail = {
+          id: Math.random().toString(36).substring(7),
+          name,
+          weightage,
+          nextReviewDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Review tomorrow
+        };
         set((state) => ({
           [subject]: {
             ...state[subject],
-            chaptersCompleted: [...state[subject].chaptersCompleted, chapter],
+            chaptersCompleted: [...state[subject].chaptersCompleted, newChapter],
           }
         }));
-        useUserStore.getState().addXP(30);
+        useUserStore.getState().addXP(weightage === 'High' ? 50 : 30);
+      },
+      reviewChapter: (subject, chapterId, success) => {
+        set((state) => {
+          const updatedChapters = state[subject].chaptersCompleted.map((ch) => {
+            if (typeof ch === 'string') return ch;
+            if (ch.id === chapterId) {
+              const daysToAdd = success ? 3 : 1;
+              return {
+                ...ch,
+                nextReviewDate: new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString(),
+              };
+            }
+            return ch;
+          });
+          return {
+            [subject]: { ...state[subject], chaptersCompleted: updatedChapters }
+          };
+        });
+        if (success) useUserStore.getState().addXP(20);
       },
       getReadiness: () => {
         const { physics, chemistry, mathematics } = get();

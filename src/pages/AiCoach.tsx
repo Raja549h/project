@@ -1,6 +1,5 @@
 import { useAiCoachStore, type Message } from '@/stores/useAiCoachStore';
-import { useAiConfigStore } from '@/stores/useAiConfigStore';
-import { chatCompletion, hasValidKey } from '@/lib/ai';
+import { chatCompletion } from '@/lib/ai';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -38,8 +37,6 @@ const SYSTEM_PROMPTS: Record<string, string> = {
 
 export default function AiCoach() {
   const { messages, mode, addMessage, setMode, clearConversation } = useAiCoachStore();
-  const hasKey = hasValidKey();
-  const apiKey = useAiConfigStore(s => s.apiKey);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -51,10 +48,6 @@ export default function AiCoach() {
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
-    if (!hasKey) {
-      navigate('/settings');
-      return;
-    }
 
     const userMsg = input.trim();
     setInput('');
@@ -103,11 +96,6 @@ export default function AiCoach() {
             </button>
           ))}
         </div>
-        {!apiKey && (
-          <button onClick={() => navigate('/settings')} className="text-xs text-fitness flex items-center gap-1">
-            <Key size={12} /> API Key Required
-          </button>
-        )}
       </div>
 
       <div className="flex items-center gap-1">
@@ -156,9 +144,6 @@ export default function AiCoach() {
           <div className="text-center py-12 text-gray-500">
             <Bot size={40} className="mx-auto mb-2 text-intelligence/40" />
             <p className="text-sm">Ask me anything about your life system</p>
-            {!apiKey && (
-              <p className="text-xs text-fitness mt-2">Go to Settings to add your Groq API key</p>
-            )}
           </div>
         )}
         <div ref={bottomRef} />
@@ -169,8 +154,7 @@ export default function AiCoach() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-          placeholder={apiKey ? 'Ask your coach...' : 'Add API key in Settings first...'}
-          disabled={!apiKey}
+          placeholder={'Ask your coach...'}
           className="flex-1 bg-surface border border-border rounded-xl p-3 text-sm outline-none focus:border-intelligence/50 disabled:opacity-50"
         />
         <button

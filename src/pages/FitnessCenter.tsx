@@ -1,8 +1,16 @@
 import { useFitnessStore } from '@/stores/useFitnessStore';
 import { useState } from 'react';
-import { Dumbbell, Plus, Flame } from 'lucide-react';
+import { Dumbbell, Plus, Flame, RefreshCw } from 'lucide-react';
+import { CircularProgressbar } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
 const WORKOUT_TYPES = ['Cardio', 'Strength', 'Yoga', 'HIIT', 'Sports', 'Walking', 'Other'];
+
+const getProgressColor = (value: number, target: number) => {
+  if (value === 0) return '#ef4444'; // Red for no progress
+  if (value >= target) return '#10b981'; // Green for goal achieved
+  return '#f59e0b'; // Amber for midway
+};
 
 export default function FitnessCenter() {
   const { workouts, weightLogs, stepsToday, sleepHours, addWorkout, logWeight, setSteps, setSleep, getFitnessScore, getWorkoutsThisWeek } = useFitnessStore();
@@ -11,6 +19,17 @@ export default function FitnessCenter() {
   const [calories, setCalories] = useState(200);
   const [weight, setWeight] = useState(70);
   const fitnessScore = getFitnessScore();
+  
+  const stepTarget = 10000;
+  const sleepTarget = 8;
+  const stepColor = getProgressColor(stepsToday, stepTarget);
+  const sleepColor = getProgressColor(sleepHours, sleepTarget);
+
+  const simulateSync = () => {
+    setSteps(Math.floor(Math.random() * 5000) + 6000); // 6k - 11k steps
+    setSleep(Math.floor(Math.random() * 3 * 10) / 10 + 6.5); // 6.5 - 9.5 hours
+    setWeight(70 + (Math.random() * 2 - 1));
+  };
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -23,21 +42,41 @@ export default function FitnessCenter() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-card p-4 rounded-xl border border-border text-center">
-          <p className="text-xs text-gray-400">Workouts This Week</p>
-          <p className="text-2xl font-bold text-fitness">{getWorkoutsThisWeek()}</p>
+        <div className="bg-card p-4 rounded-xl border border-border text-center flex flex-col justify-center">
+          <p className="text-xs text-gray-400 mb-2">Workouts This Week</p>
+          <p className="text-3xl font-bold text-fitness">{getWorkoutsThisWeek()}</p>
         </div>
-        <div className="bg-card p-4 rounded-xl border border-border text-center">
-          <p className="text-xs text-gray-400">Total Workouts</p>
-          <p className="text-2xl font-bold text-fitness">{workouts.length}</p>
+        <div className="bg-card p-4 rounded-xl border border-border text-center flex flex-col justify-center">
+          <p className="text-xs text-gray-400 mb-2">Total Workouts</p>
+          <p className="text-3xl font-bold text-fitness">{workouts.length}</p>
         </div>
-        <div className="bg-card p-4 rounded-xl border border-border text-center">
-          <p className="text-xs text-gray-400">Steps Today</p>
-          <p className="text-2xl font-bold text-fitness">{stepsToday.toLocaleString()}</p>
+        <div className="bg-card p-4 rounded-xl border border-border text-center flex flex-col items-center">
+          <p className="text-xs text-gray-400 mb-2">Steps Today</p>
+          <div className="w-20 h-20">
+            <CircularProgressbar
+              value={Math.min((stepsToday / stepTarget) * 100, 100)}
+              text={`${(stepsToday / 1000).toFixed(1)}k`}
+              styles={{
+                path: { stroke: stepColor },
+                text: { fill: stepColor, fontSize: '24px', fontWeight: 'bold' },
+                trail: { stroke: '#1f1f1f' }
+              }}
+            />
+          </div>
         </div>
-        <div className="bg-card p-4 rounded-xl border border-border text-center">
-          <p className="text-xs text-gray-400">Sleep</p>
-          <p className="text-2xl font-bold text-fitness">{sleepHours}h</p>
+        <div className="bg-card p-4 rounded-xl border border-border text-center flex flex-col items-center">
+          <p className="text-xs text-gray-400 mb-2">Sleep</p>
+          <div className="w-20 h-20">
+            <CircularProgressbar
+              value={Math.min((sleepHours / sleepTarget) * 100, 100)}
+              text={`${sleepHours}h`}
+              styles={{
+                path: { stroke: sleepColor },
+                text: { fill: sleepColor, fontSize: '24px', fontWeight: 'bold' },
+                trail: { stroke: '#1f1f1f' }
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -62,7 +101,12 @@ export default function FitnessCenter() {
         </div>
 
         <div className="bg-card p-4 rounded-xl border border-border">
-          <h2 className="text-sm font-semibold text-gray-300 mb-3">Quick Logs</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-300">Quick Logs</h2>
+            <button onClick={simulateSync} className="text-xs flex items-center gap-1 text-intelligence hover:text-intelligence/80">
+              <RefreshCw size={12} /> Sync Device
+            </button>
+          </div>
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-400 w-20">Steps:</span>

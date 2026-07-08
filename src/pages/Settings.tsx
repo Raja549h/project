@@ -1,15 +1,11 @@
 import { useUserStore } from '@/stores/useUserStore';
-import { useAiConfigStore } from '@/stores/useAiConfigStore';
 import { useState } from 'react';
-import { Settings as SettingsIcon, Download, Upload, AlertTriangle, Key, Eye, EyeOff } from 'lucide-react';
+import { Settings as SettingsIcon, Download, Upload, AlertTriangle } from 'lucide-react';
 
 export default function Settings() {
   const { username, avatar, setUsername, setAvatar, resetProgress } = useUserStore();
-  const { apiKey, model, setApiKey, setModel } = useAiConfigStore();
   const [nameInput, setNameInput] = useState(username);
   const [avatarInput, setAvatarInput] = useState(avatar);
-  const [keyInput, setKeyInput] = useState(apiKey);
-  const [showKey, setShowKey] = useState(false);
   const [showReset, setShowReset] = useState(false);
 
   const handleExport = () => {
@@ -78,40 +74,7 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="bg-card p-4 rounded-xl border border-border">
-        <div className="flex items-center gap-2 mb-3">
-          <Key size={16} className="text-intelligence" />
-          <h2 className="text-sm font-semibold text-gray-300">Groq AI Configuration</h2>
-        </div>
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs text-gray-400 mb-1">API Key</p>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type={showKey ? 'text' : 'password'}
-                  value={keyInput}
-                  onChange={e => setKeyInput(e.target.value)}
-                  className="w-full bg-surface border border-border rounded-lg p-2 text-sm outline-none pr-10"
-                  placeholder="gsk_..."
-                />
-                <button onClick={() => setShowKey(!showKey)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
-                  {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-              <button onClick={() => setApiKey(keyInput)} className="px-3 py-2 bg-intelligence/20 text-intelligence rounded-lg text-sm">Save</button>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Your key is stored locally in your browser only.</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-400 mb-1">Model</p>
-            <select value={model} onChange={e => setModel(e.target.value)} className="bg-surface border border-border rounded-lg p-2 text-sm w-full">
-              <option value="llama-3.1-8b-instant">Llama 3.1 8B (fast)</option>
-              <option value="llama-3.3-70b-versatile">Llama 3.3 70B (powerful)</option>
-            </select>
-          </div>
-        </div>
-      </div>
+
 
       <div className="bg-card p-4 rounded-xl border border-border">
         <h2 className="text-sm font-semibold text-gray-300 mb-3">Data Management</h2>

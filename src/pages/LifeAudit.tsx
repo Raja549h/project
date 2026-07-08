@@ -1,12 +1,11 @@
 import { useLifeAuditStore } from '@/stores/useLifeAuditStore';
-import { useAiConfigStore } from '@/stores/useAiConfigStore';
-import { chatCompletion, hasValidKey } from '@/lib/ai';
+import { chatCompletion } from '@/lib/ai';
 import { useState } from 'react';
 import { FileText, Plus, Sparkles } from 'lucide-react';
 
 export default function LifeAudit() {
   const { timeLogs, addTimeLog, getEfficiencyScore, getLifeROI, getWeeklyReport } = useLifeAuditStore();
-  const hasKey = hasValidKey();
+  const hasKey = true;
   const [productive, setProductive] = useState(6);
   const [wasted, setWasted] = useState(2);
   const [energy, setEnergy] = useState(7);

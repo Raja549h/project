@@ -1,12 +1,11 @@
 import { useEnvironmentStore } from '@/stores/useEnvironmentStore';
-import { useAiConfigStore } from '@/stores/useAiConfigStore';
-import { chatCompletion, hasValidKey } from '@/lib/ai';
+import { chatCompletion } from '@/lib/ai';
 import { useState } from 'react';
 import { Palette, Upload, Sparkles } from 'lucide-react';
 
 export default function EnvironmentDesigner() {
   const { scores, addScore, getLatest } = useEnvironmentStore();
-  const hasKey = hasValidKey();
+  const hasKey = true;
   const [focusScore, setFocusScore] = useState(70);
   const [environmentScore, setEnvironmentScore] = useState(65);
   const [sleepScore, setSleepScore] = useState(75);

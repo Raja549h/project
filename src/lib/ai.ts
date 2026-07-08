@@ -1,12 +1,9 @@
-import { useAiConfigStore, GROQ_BASE_URL } from '@/stores/useAiConfigStore';
-
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
 async function callCloudflareFunction(messages: ChatMessage[], options?: { temperature?: number; maxTokens?: number }): Promise<string> {
-  const { apiKey, model } = useAiConfigStore.getState();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
 
@@ -16,8 +13,6 @@ async function callCloudflareFunction(messages: ChatMessage[], options?: { tempe
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages,
-        model,
-        apiKey: apiKey || undefined,
         temperature: options?.temperature ?? 0.7,
         maxTokens: options?.maxTokens ?? 1024,
       }),
@@ -42,8 +37,4 @@ export async function chatCompletion(
   options?: { temperature?: number; maxTokens?: number }
 ): Promise<string> {
   return callCloudflareFunction(messages, options);
-}
-
-export function hasValidKey(): boolean {
-  return !!useAiConfigStore.getState().apiKey;
 }

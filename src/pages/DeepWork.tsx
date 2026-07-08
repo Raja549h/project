@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useDeepWorkStore, type DeepWorkSession } from '@/stores/useDeepWorkStore';
+import { useUserStore } from '@/stores/useUserStore';
+import { useBattleStore } from '@/stores/useBattleStore';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 
 function PomodoroTimer() {
@@ -12,7 +14,6 @@ function PomodoroTimer() {
   const endTimeRef = useRef<number>(0);
   const durationRef = useRef<number>(25 * 60 * 1000);
   const intervalRef = useRef<number | null>(null);
-  const wasActiveRef = useRef(false);
 
   const tick = useCallback(() => {
     if (!endTimeRef.current) return;
@@ -30,12 +31,19 @@ function PomodoroTimer() {
       setDisplay('00:00');
 
       if (!isBreak) {
+        const durationMins = durationRef.current / 60000;
         useDeepWorkStore.getState().addSession({
           date: new Date().toISOString().split('T')[0],
-          duration: durationRef.current / 60000 / 60,
+          duration: durationMins / 60,
           focusScore,
           notes: '',
         });
+        
+        // RPG Rewards
+        const xpReward = Math.round(durationMins * 2); 
+        const damage = Math.round(durationMins * (focusScore / 5));
+        useUserStore.getState().addXP(xpReward);
+        useBattleStore.getState().damageBoss(damage);
       }
     }
   }, [isBreak, focusScore]);
