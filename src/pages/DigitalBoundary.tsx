@@ -1,6 +1,7 @@
 import { useBoundaryStore } from '@/stores/useBoundaryStore';
+import { chatCompletion } from '@/lib/ai';
 import { useState } from 'react';
-import { Lock, Plus, Trash2 } from 'lucide-react';
+import { Lock, Plus, Trash2, Sparkles } from 'lucide-react';
 
 export default function DigitalBoundary() {
   const { focusWindows, distractionLogs, addFocusWindow, removeFocusWindow, logDistraction, getTodayScreenTime, getAttentionSaved } = useBoundaryStore();
@@ -8,6 +9,32 @@ export default function DigitalBoundary() {
   const [endTime, setEndTime] = useState('12:00');
   const [interruptions, setInterruptions] = useState(5);
   const [screenTime, setScreenTime] = useState(120);
+  const [aiOptimizer, setAiOptimizer] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const getAiOptimizer = async () => {
+    if (distractionLogs.length === 0) return;
+    setLoading(true);
+    try {
+      const prompt = `Based on my digital boundary stats:
+- Today's Screen Time: ${getTodayScreenTime()} mins
+- Focus Windows Scheduled: ${focusWindows.length}
+- Attention Saved: ${getAttentionSaved()} mins
+- Latest Distraction Log: ${distractionLogs[distractionLogs.length - 1].interruptions} interruptions, ${distractionLogs[distractionLogs.length - 1].screenTimeMinutes} mins screen time
+
+Give me 3 strict, aggressive tactics to reduce digital distractions and enforce my focus windows today.`;
+      
+      const res = await chatCompletion([
+        { role: 'system', content: 'You are an elite digital minimalism and focus coach. Be ruthless about cutting out distractions.' },
+        { role: 'user', content: prompt }
+      ], { maxTokens: 400 });
+      setAiOptimizer(res);
+    } catch {
+      setAiOptimizer('');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -71,6 +98,24 @@ export default function DigitalBoundary() {
           </div>
         </div>
       </div>
+
+      {distractionLogs.length > 0 && (
+        <div className="bg-card p-4 rounded-xl border border-border">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-300">AI Focus Optimizer</h2>
+            <button onClick={getAiOptimizer} disabled={loading} className="text-xs px-2 py-1 bg-intelligence/20 text-intelligence rounded-lg">
+              <Sparkles size={12} className="inline mr-1" />{loading ? 'Optimizing...' : 'Get Optimization'}
+            </button>
+          </div>
+          {loading ? (
+            <p className="text-sm text-gray-400 animate-pulse">Generating your focus optimization strategy...</p>
+          ) : aiOptimizer ? (
+            <p className="text-sm text-gray-400 whitespace-pre-wrap">{aiOptimizer}</p>
+          ) : (
+            <p className="text-sm text-gray-500">Click the button to get AI-powered tactics for reducing digital distractions.</p>
+          )}
+        </div>
+      )}
 
       {distractionLogs.length > 0 && (
         <div className="bg-card p-4 rounded-xl border border-border">

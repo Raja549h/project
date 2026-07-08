@@ -1,6 +1,7 @@
 import { useReputationStore } from '@/stores/useReputationStore';
+import { chatCompletion } from '@/lib/ai';
 import { useState } from 'react';
-import { ShieldCheck, Plus } from 'lucide-react';
+import { ShieldCheck, Plus, Sparkles } from 'lucide-react';
 
 export default function Reputation() {
   const { history, addScore, getOverall, getCurrent } = useReputationStore();
@@ -8,6 +9,8 @@ export default function Reputation() {
   const [trust, setTrust] = useState(50);
   const [accountability, setAccountability] = useState(50);
   const [consistency, setConsistency] = useState(50);
+  const [aiStrategy, setAiStrategy] = useState('');
+  const [loading, setLoading] = useState(false);
   const overall = getOverall();
   const current = getCurrent();
 
@@ -16,6 +19,31 @@ export default function Reputation() {
       reliability, trust, accountability, consistency,
       date: new Date().toISOString().split('T')[0],
     });
+  };
+
+  const getAiStrategy = async () => {
+    if (history.length === 0) return;
+    setLoading(true);
+    try {
+      const prompt = `Based on my current reputation and character scores:
+- Overall Reputation: ${overall}/100
+- Reliability: ${current.reliability}/100
+- Trust: ${current.trust}/100
+- Accountability: ${current.accountability}/100
+- Consistency: ${current.consistency}/100
+
+Give me 3 strict, actionable strategies to build a stronger reputation and character.`;
+      
+      const res = await chatCompletion([
+        { role: 'system', content: 'You are an elite reputation and networking coach. Be direct, actionable, and specific.' },
+        { role: 'user', content: prompt }
+      ], { maxTokens: 400 });
+      setAiStrategy(res);
+    } catch {
+      setAiStrategy('');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,6 +90,24 @@ export default function Reputation() {
           <Plus size={16} className="inline mr-1" /> Log Today's Scores
         </button>
       </div>
+
+      {history.length > 0 && (
+        <div className="bg-card p-4 rounded-xl border border-border">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-300">AI Reputation Strategy</h2>
+            <button onClick={getAiStrategy} disabled={loading} className="text-xs px-2 py-1 bg-intelligence/20 text-intelligence rounded-lg">
+              <Sparkles size={12} className="inline mr-1" />{loading ? 'Strategizing...' : 'Get Strategy'}
+            </button>
+          </div>
+          {loading ? (
+            <p className="text-sm text-gray-400 animate-pulse">Generating your reputation strategy...</p>
+          ) : aiStrategy ? (
+            <p className="text-sm text-gray-400 whitespace-pre-wrap">{aiStrategy}</p>
+          ) : (
+            <p className="text-sm text-gray-500">Click the button to get AI-powered networking and character-building advice.</p>
+          )}
+        </div>
+      )}
 
       {history.length > 0 && (
         <div className="bg-card p-4 rounded-xl border border-border">

@@ -1,4 +1,16 @@
 import { useAiCoachStore, type Message } from '@/stores/useAiCoachStore';
+import { useUserStore } from '@/stores/useUserStore';
+import { useBattleStore } from '@/stores/useBattleStore';
+import { useConfidenceStore } from '@/stores/useConfidenceStore';
+import { useDeepWorkStore } from '@/stores/useDeepWorkStore';
+import { useEnvironmentStore } from '@/stores/useEnvironmentStore';
+import { useFitnessStore } from '@/stores/useFitnessStore';
+import { useHabitStore } from '@/stores/useHabitStore';
+import { useJeeStore } from '@/stores/useJeeStore';
+import { useLifeAuditStore } from '@/stores/useLifeAuditStore';
+import { useProjectStore } from '@/stores/useProjectStore';
+import { useReputationStore } from '@/stores/useReputationStore';
+import { useBoundaryStore } from '@/stores/useBoundaryStore';
 import { chatCompletion } from '@/lib/ai';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -21,22 +33,35 @@ const MASTER_MODES = [
 ];
 
 const SYSTEM_PROMPTS: Record<string, string> = {
-  Coach: `You are a life coach for LifeOS ASCEND, a gamified life management system. Help the user improve their habits, productivity, and life score. Be practical, encouraging, and specific. Keep responses concise (2-4 sentences).`,
-  Planner: `You are a productivity planner for LifeOS ASCEND. Create actionable daily/weekly plans based on the user's goals and current stats. Be specific with time blocks and priorities. Keep responses concise.`,
-  Motivator: `You are a high-energy motivation coach. Inspire the user to take action, maintain streaks, and push through resistance. Use occasional emojis. Keep responses punchy and powerful.`,
-  Analyst: `You are a data analyst for LifeOS ASCEND. Analyze the user's stats, identify patterns, and suggest data-driven improvements. Be objective and specific. Keep responses concise.`,
-  Aurelius: `You are Marcus Aurelius, Stoic Emperor of Rome. Speak with calm, grounded authority. Apply the dichotomy of control: ruthlessly separate what is within the user's power from what is not. Emphasize inner resilience, virtue, and tranquility. Use concise, memorable maxims. Never patronize.`,
-  Caesar: `You are Julius Caesar, Roman general and strategist. Speak with decisive, commanding brevity. Apply celeritas (swiftness) and audacity. Identify the single decisive point and advocate for concentrated action. Outflank problems, never meet them head-on when you can sever their foundations.`,
-  Napoleon: `You are Napoleon Bonaparte, Emperor and military strategist. Speak with bold strategic clarity. Identify the decisive point and advocate for massing effort there. Use maneuvers to divide and conquer. Every response should identify a center of gravity and a plan to strike it.`,
-  Tesla: `You are Nikola Tesla, visionary inventor and engineer. Speak with precise, analytical intensity. Before any suggestion, run a complete mental simulation. Emphasize visualization, divergent ideation followed by convergent refinement. Reject conventional limitations. Think in systems and fields.`,
-  Churchill: `You are Winston Churchill, wartime Prime Minister of Britain. Speak with bulldog resolve and rhetorical power. Use the "Action This Day" framework. Identify the critical bottleneck and demand immediate, decisive action. Be blunt, urgent, and inspiring. Never waste words.`,
-  Franklin: `You are Benjamin Franklin, Founding Father and polymath. Speak with practical, methodical wisdom. Apply systematic self-improvement through iterative tracking. Use the Junto method of cooperative inquiry. Emphasize habits, virtues, and feedback loops. Be warm, witty, and wise.`,
-  Frankl: `You are Viktor Frankl, neurologist, psychiatrist, and Holocaust survivor. Speak with profound, compassionate depth. Apply logotherapy: help the user find meaning in their suffering. Emphasize that between stimulus and response there is a space — in that space is their power to choose.`,
-  Musk: `You are Elon Musk, engineer and entrepreneur. Speak in first-principles — strip everything down to the fundamental truths. Apply the 5-step algorithm: 1) Make requirements less dumb, 2) Aggressively delete, 3) Simplify, 4) Accelerate, 5) Automate. Be direct, intense, and radically practical.`,
+  Coach: `You are the ultimate UHM-OS Master Coach for the LifeOS ASCEND gamified life management system. You have access to the user's complete life data context. Analyze their question, current weaknesses, and stats. Then, dynamically adopt the psychology of the most appropriate Master (Aurelius for resilience, Napoleon for strategy, Tesla for innovation, etc.) to frame your response. Explicitly state whose psychology you are channeling. Provide deeply personalized, actionable advice based on their live stats.`,
+  Planner: `You are a strict, hyper-efficient productivity planner. Use the user's Life Audit, Deep Work, and Digital Boundary stats to create actionable, time-blocked daily/weekly plans. Be specific with priorities.`,
+  Motivator: `You are a high-energy, ruthless motivation coach. Analyze the user's Habits, Streaks, and Fitness stats. Inspire them to push through resistance. Use occasional emojis. Keep it punchy and powerful.`,
+  Analyst: `You are a cold, calculated data analyst. Analyze the user's JEE accuracy, Life ROI, Reputation, and Confidence scores. Identify hidden patterns, bottlenecks, and mathematical improvements. Be objective.`,
+  Aurelius: `You are Marcus Aurelius. Speak with stoic, calm authority. Apply the dichotomy of control to the user's stats: ruthlessly separate what is within their power (habits, focus) from what is not. Emphasize inner resilience.`,
+  Caesar: `You are Julius Caesar. Speak with decisive, commanding brevity. Identify the single decisive point in the user's life stats and advocate for concentrated action and celeritas (swiftness). Outflank problems.`,
+  Napoleon: `You are Napoleon Bonaparte. Speak with bold strategic clarity. Look at the user's projects and JEE data. Identify the center of gravity and advocate for massing effort there. Use maneuvers to divide and conquer.`,
+  Tesla: `You are Nikola Tesla. Speak with precise, analytical intensity. Emphasize visualization, divergent ideation, and systems thinking. Look at the user's deep work and environment stats to optimize their "frequency."`,
+  Churchill: `You are Winston Churchill. Speak with bulldog resolve and rhetorical power. Identify the critical bottleneck in their Life Audit and demand "Action This Day." Be blunt, urgent, and inspiring.`,
+  Franklin: `You are Benjamin Franklin. Speak with practical, methodical wisdom. Focus on their Habits, Reputation, and daily routines. Emphasize systematic self-improvement and virtues. Be warm, witty, and wise.`,
+  Frankl: `You are Viktor Frankl. Speak with profound, compassionate depth. Help the user find meaning in their struggles (e.g., low scores, broken streaks). Emphasize that between stimulus and response, there is choice.`,
+  Musk: `You are Elon Musk. Speak in first-principles. Look at their efficiency scores. Apply the 5-step algorithm: 1) Make requirements less dumb, 2) Delete, 3) Simplify, 4) Accelerate, 5) Automate. Be radically practical.`,
 };
 
 export default function AiCoach() {
   const { messages, mode, addMessage, setMode, clearConversation } = useAiCoachStore();
+  const user = useUserStore();
+  const battle = useBattleStore();
+  const confidence = useConfidenceStore();
+  const deepWork = useDeepWorkStore();
+  const environment = useEnvironmentStore();
+  const fitness = useFitnessStore();
+  const habit = useHabitStore();
+  const jee = useJeeStore();
+  const lifeAudit = useLifeAuditStore();
+  const project = useProjectStore();
+  const reputation = useReputationStore();
+  const boundary = useBoundaryStore();
+
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -55,13 +80,28 @@ export default function AiCoach() {
     setLoading(true);
 
     try {
-      const systemPrompt = SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.Coach;
+      const contextData = `
+CURRENT USER LIVE STATS:
+- RPG: Level ${user.level}, ${user.xp} XP, ${user.currentStreak} Day Streak, Rank: ${user.rank}
+- Battle: Boss Level ${battle.bossLevel}, Health: ${battle.bossHealth}/${battle.maxBossHealth}
+- Fitness: ${fitness.stepsToday} Steps, ${fitness.sleepHours}h Sleep, ${fitness.workouts.reduce((s, w) => s + w.calories, 0)} kcal, ${fitness.weightLogs[fitness.weightLogs.length - 1]?.weight || 0}kg Weight
+- Confidence: ${confidence.getLatestScore()} Latest Score, ${confidence.getAverageScore()} Avg
+- Environment: ${environment.getLatest()?.focusScore || 0} Focus, ${environment.getLatest()?.sleepScore || 0} Sleep Env
+- Habits: ${habit.habits.length} Habits Tracked (Max Streak: ${Math.max(...habit.habits.map(h => h.streak), 0)})
+- Deep Work: ${deepWork.sessions.length} Sessions (Total: ${deepWork.sessions.reduce((s, x) => s + x.duration, 0).toFixed(1)}h)
+- JEE Prep: ${jee.physics.questionsSolved + jee.chemistry.questionsSolved + jee.mathematics.questionsSolved} Total Qs Solved
+- Life Audit: Efficiency ${lifeAudit.getEfficiencyScore()}%, ROI ${lifeAudit.getLifeROI()}
+- Projects: ${project.projects.length} Total Projects (${project.projects.reduce((s, p) => s + p.milestonesCompleted, 0)} Milestones)
+- Reputation: ${reputation.getOverall()} Overall Score
+- Digital Boundary: ${boundary.getTodayScreenTime()}m Screen Time, ${boundary.getAttentionSaved()}m Saved
+`;
+      const systemPrompt = (SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.Coach) + "\n" + contextData;
       const conversation = [
         { role: 'system' as const, content: systemPrompt },
         ...messages.slice(-10).map(m => ({ role: m.role === 'coach' ? 'assistant' as const : 'user' as const, content: m.content })),
         { role: 'user' as const, content: userMsg },
       ];
-      const reply = await chatCompletion(conversation, { maxTokens: 512 });
+      const reply = await chatCompletion(conversation, { maxTokens: 800 });
       addMessage('coach', reply);
     } catch (err: any) {
       addMessage('coach', `Error: ${err.message || 'Failed to get response'}`);

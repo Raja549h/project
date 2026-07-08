@@ -1,6 +1,7 @@
 import { useConfidenceStore } from '@/stores/useConfidenceStore';
+import { chatCompletion } from '@/lib/ai';
 import { useState } from 'react';
-import { Video, Upload, TrendingUp } from 'lucide-react';
+import { Video, Upload, TrendingUp, Sparkles } from 'lucide-react';
 
 export default function ConfidenceLab() {
   const { analyses, addAnalysis, getLatestScore, getAverageScore } = useConfidenceStore();
@@ -9,6 +10,8 @@ export default function ConfidenceLab() {
   const [eyeContact, setEyeContact] = useState(70);
   const [presence, setPresence] = useState(65);
   const [fileName, setFileName] = useState('');
+  const [aiFeedback, setAiFeedback] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const confidenceScore = Math.round((eyeContact * 0.3 + presence * 0.3 + Math.max(0, 100 - fillerWords * 5) * 0.2 + Math.max(0, 100 - Math.abs(speakingSpeed - 150) / 2) * 0.2));
 
@@ -20,6 +23,32 @@ export default function ConfidenceLab() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setFileName(file.name);
+  };
+
+  const getAiFeedback = async () => {
+    if (analyses.length === 0) return;
+    setLoading(true);
+    try {
+      const latest = analyses[analyses.length - 1];
+      const prompt = `Based on my latest public speaking metrics:
+- Confidence Score: ${latest.confidenceScore}/100
+- Speaking Speed: ${latest.speakingSpeed} wpm (ideal is ~150)
+- Filler Words: ${latest.fillerWords}
+- Eye Contact: ${latest.eyeContact}%
+- Presence: ${latest.presence}%
+
+Give me 3 strict, highly actionable tips to improve my presentation skills.`;
+      
+      const res = await chatCompletion([
+        { role: 'system', content: 'You are an elite public speaking and charisma coach. Be direct, actionable, and specific.' },
+        { role: 'user', content: prompt }
+      ], { maxTokens: 400 });
+      setAiFeedback(res);
+    } catch {
+      setAiFeedback('');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -88,6 +117,24 @@ export default function ConfidenceLab() {
           </div>
         </div>
       </div>
+
+      {analyses.length > 0 && (
+        <div className="bg-card p-4 rounded-xl border border-border">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-300">AI Feedback</h2>
+            <button onClick={getAiFeedback} disabled={loading} className="text-xs px-2 py-1 bg-intelligence/20 text-intelligence rounded-lg">
+              <Sparkles size={12} className="inline mr-1" />{loading ? 'Analyzing...' : 'Get AI Feedback'}
+            </button>
+          </div>
+          {loading ? (
+            <p className="text-sm text-gray-400 animate-pulse">Analyzing your charisma metrics...</p>
+          ) : aiFeedback ? (
+            <p className="text-sm text-gray-400 whitespace-pre-wrap">{aiFeedback}</p>
+          ) : (
+            <p className="text-sm text-gray-500">Click the button to get AI-powered public speaking advice based on your latest analysis.</p>
+          )}
+        </div>
+      )}
 
       {analyses.length > 0 && (
         <div className="bg-card p-4 rounded-xl border border-border">
