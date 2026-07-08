@@ -16,13 +16,16 @@ function calculateStreak(dates: string[]): number {
   if (!dates.length) return 0;
   const sorted = [...dates].sort().reverse();
   const today = new Date().toISOString().split('T')[0];
-  if (sorted[0] !== today && sorted[0] !== getYesterday()) return 0;
+  const yesterday = getYesterday();
+  const dayBefore = getDayBefore();
+  // Grace period: allow up to 2 days gap before breaking streak
+  if (sorted[0] !== today && sorted[0] !== yesterday && sorted[0] !== dayBefore) return 0;
   let streak = 1;
   for (let i = 1; i < sorted.length; i++) {
     const prev = new Date(sorted[i-1]);
     const curr = new Date(sorted[i]);
     const diff = (prev.getTime() - curr.getTime()) / (1000*3600*24);
-    if (Math.round(diff) === 1) streak++;
+    if (Math.round(diff) <= 2) streak++;
     else break;
   }
   return streak;
@@ -31,6 +34,12 @@ function calculateStreak(dates: string[]): number {
 function getYesterday(): string {
   const d = new Date();
   d.setDate(d.getDate() - 1);
+  return d.toISOString().split('T')[0];
+}
+
+function getDayBefore(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 2);
   return d.toISOString().split('T')[0];
 }
 
