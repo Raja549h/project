@@ -11,13 +11,14 @@ import { useLifeAuditStore } from '@/stores/useLifeAuditStore';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { useReputationStore } from '@/stores/useReputationStore';
 import { useBoundaryStore } from '@/stores/useBoundaryStore';
-import { chatCompletion } from '@/lib/ai';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Send, Bot, Trash2, Key, Shield, Sword, Landmark, Lightbulb,
   MessageSquareQuote, Bird, Heart, Cpu, BookOpen
 } from 'lucide-react';
+import { useAgentStream } from '@/hooks/useAgentStream';
+import { AgentObservability } from '@/components/aicoach/AgentObservability';
 
 const COACH_MODES = ['Coach', 'Planner', 'Motivator', 'Analyst'] as const;
 
@@ -71,44 +72,21 @@ export default function AiCoach() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
+  const { messages: streamMessages, isStreaming, isPaused, pendingActions, startStream, approveActions, intervene } = useAgentStream();
+
   const handleSend = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || isStreaming) return;
 
     const userMsg = input.trim();
     setInput('');
     addMessage('user', userMsg);
-    setLoading(true);
-
-    try {
-      const contextData = `
-CURRENT USER LIVE STATS:
-- RPG: Level ${user.level}, ${user.xp} XP, ${user.currentStreak} Day Streak, Rank: ${user.rank}
-- Battle: Boss Level ${battle.bossLevel}, Health: ${battle.bossHealth}/${battle.maxBossHealth}
-- Fitness: ${fitness.stepsToday} Steps, ${fitness.sleepHours}h Sleep, ${fitness.workouts.reduce((s, w) => s + w.calories, 0)} kcal, ${fitness.weightLogs[fitness.weightLogs.length - 1]?.weight || 0}kg Weight
-- Confidence: ${confidence.getLatestScore()} Latest Score, ${confidence.getAverageScore()} Avg
-- Environment: ${environment.getLatest()?.focusScore || 0} Focus, ${environment.getLatest()?.sleepScore || 0} Sleep Env
-- Habits: ${habit.habits.length} Habits Tracked (Max Streak: ${Math.max(...habit.habits.map(h => h.streak), 0)})
-- Deep Work: ${deepWork.sessions.length} Sessions (Total: ${deepWork.sessions.reduce((s, x) => s + x.duration, 0).toFixed(1)}h)
-- JEE Prep: ${jee.physics.questionsSolved + jee.chemistry.questionsSolved + jee.mathematics.questionsSolved} Total Qs Solved
-- Life Audit: Efficiency ${lifeAudit.getEfficiencyScore()}%, ROI ${lifeAudit.getLifeROI()}
-- Projects: ${project.projects.length} Total Projects (${project.projects.reduce((s, p) => s + p.milestonesCompleted, 0)} Milestones)
-- Reputation: ${reputation.getOverall()} Overall Score
-- Digital Boundary: ${boundary.getTodayScreenTime()}m Screen Time, ${boundary.getAttentionSaved()}m Saved
-`;
-      const systemPrompt = (SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.Coach) + "\n" + contextData;
-      const conversation = [
-        { role: 'system' as const, content: systemPrompt },
-        ...messages.slice(-10).map(m => ({ role: m.role === 'coach' ? 'assistant' as const : 'user' as const, content: m.content })),
-        { role: 'user' as const, content: userMsg },
-      ];
-      const reply = await chatCompletion(conversation, { maxTokens: 800 });
-      addMessage('coach', reply);
-    } catch (err: any) {
-      addMessage('coach', `Error: ${err.message || 'Failed to get response'}`);
-    } finally {
-      setLoading(false);
-    }
+    
+    // Pass 'strict' to trigger human-in-the-loop approvals
+    await startStream(userMsg, 'strict');
   };
+
+  // Sync stream messages to local store when done (or just rely on the hook's messages)
+  // For this integration, we'll render both the store's history and the active stream.
 
   return (
     <div className="space-y-4 max-w-3xl mx-auto h-full flex flex-col">
@@ -162,6 +140,13 @@ CURRENT USER LIVE STATS:
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 bg-card rounded-xl border border-border p-4 max-h-[60vh]">
+        <AgentObservability 
+          isStreaming={isStreaming} 
+          isPaused={isPaused} 
+          pendingActions={pendingActions}
+          onApprove={approveActions}
+          onIntervene={intervene}
+        />
         {messages.map((msg: Message) => (
           <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] p-3 rounded-xl text-sm whitespace-pre-wrap ${
@@ -173,14 +158,25 @@ CURRENT USER LIVE STATS:
             </div>
           </div>
         ))}
-        {loading && (
+        {streamMessages.map((msg, idx) => (
+          <div key={`stream-${idx}`} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[80%] p-3 rounded-xl text-sm whitespace-pre-wrap ${
+              msg.role === 'user'
+                ? 'bg-deep/20 text-gray-200'
+                : 'bg-surface text-gray-300'
+            }`}>
+              {msg.content}
+            </div>
+          </div>
+        ))}
+        {isStreaming && !isPaused && (
           <div className="flex justify-start">
             <div className="bg-surface p-3 rounded-xl text-sm text-gray-400">
-              <span className="animate-pulse">Thinking...</span>
+              <span className="animate-pulse">Agent Swarm Thinking...</span>
             </div>
           </div>
         )}
-        {messages.length === 0 && (
+        {messages.length === 0 && streamMessages.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             <Bot size={40} className="mx-auto mb-2 text-intelligence/40" />
             <p className="text-sm">Ask me anything about your life system</p>
@@ -199,7 +195,7 @@ CURRENT USER LIVE STATS:
         />
         <button
           onClick={handleSend}
-          disabled={loading || !input.trim()}
+          disabled={isStreaming || !input.trim()}
           className="p-3 bg-intelligence/20 text-intelligence rounded-xl hover:bg-intelligence/30 disabled:opacity-40"
         >
           <Send size={18} />
