@@ -13,14 +13,17 @@ import { useReputationStore } from '@/stores/useReputationStore';
 import { useBoundaryStore } from '@/stores/useBoundaryStore';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Send, Bot, Trash2, Key, Shield, Sword, Landmark, Lightbulb,
-  MessageSquareQuote, Bird, Heart, Cpu, BookOpen
-} from 'lucide-react';
-import { useAgentStream } from '@/hooks/useAgentStream';
 import { AgentObservability } from '@/components/aicoach/AgentObservability';
 import { AgentNetworkGraph } from '@/components/aicoach/AgentNetworkGraph';
 import { InterAgentChat } from '@/components/aicoach/InterAgentChat';
+import { ViewModeSelector, type ViewMode } from '@/components/aicoach/ViewModeSelector';
+import {
+  Send, Bot, Trash2, Shield, Sword, Landmark, Lightbulb,
+  MessageSquareQuote, Bird, Heart, Cpu, BookOpen
+} from 'lucide-react';
+import { ThreeDWorkspace } from '@/components/aicoach/ThreeDWorkspace';
+import { AdvancedAnalytics } from '@/components/aicoach/AdvancedAnalytics';
+import { useAgentStreamStore } from '@/stores/useAgentStreamStore';
 
 const COACH_MODES = ['Coach', 'Planner', 'Motivator', 'Analyst'] as const;
 
@@ -66,13 +69,9 @@ export default function AiCoach() {
   const boundary = useBoundaryStore();
 
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('chat');
   const bottomRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
 
   const { 
     messages: streamMessages, 
@@ -84,7 +83,11 @@ export default function AiCoach() {
     startStream, 
     approveActions, 
     intervene 
-  } = useAgentStream();
+  } = useAgentStreamStore();
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamMessages, isStreaming]);
 
   const handleSend = async () => {
     if (!input.trim() || isStreaming) return;
@@ -150,16 +153,20 @@ export default function AiCoach() {
           })}
         </div>
       </div>
+      <ViewModeSelector currentMode={viewMode} onModeChange={setViewMode} />
 
-      <div className="flex-1 overflow-y-auto space-y-3 bg-card rounded-xl border border-border p-4 max-h-[60vh]">
-        {graphData && <AgentNetworkGraph data={graphData} onIntervene={intervene} />}
-        {internalLogs.length > 0 && <InterAgentChat logs={internalLogs} />}
+      <div className="flex-1 overflow-y-auto space-y-3 bg-card rounded-xl border border-border p-4 min-h-[50vh]">
+        {viewMode === 'network' && graphData && <AgentNetworkGraph data={graphData} onIntervene={intervene} />}
+        {viewMode === 'immersive' && <ThreeDWorkspace />}
+        {viewMode === 'analytics' && <AdvancedAnalytics />}
+        
+        {viewMode === 'chat' && internalLogs.length > 0 && <InterAgentChat logs={internalLogs} />}
         
         <AgentObservability 
           isStreaming={isStreaming} 
           isPaused={isPaused} 
           pendingActions={pendingActions}
-          onApprove={approveActions}
+          onApprove={(decision) => approveActions(decision === 'approve')}
           onIntervene={intervene}
         />
         {messages.map((msg: Message) => (
@@ -184,14 +191,14 @@ export default function AiCoach() {
             </div>
           </div>
         ))}
-        {isStreaming && !isPaused && (
+        {viewMode === 'chat' && isStreaming && !isPaused && (
           <div className="flex justify-start">
             <div className="bg-surface p-3 rounded-xl text-sm text-gray-400">
               <span className="animate-pulse">Agent Swarm Thinking...</span>
             </div>
           </div>
         )}
-        {messages.length === 0 && streamMessages.length === 0 && (
+        {viewMode === 'chat' && messages.length === 0 && streamMessages.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             <Bot size={40} className="mx-auto mb-2 text-intelligence/40" />
             <p className="text-sm">Ask me anything about your life system</p>
