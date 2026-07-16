@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useAgentStream } from '@/hooks/useAgentStream';
 import { AgentObservability } from '@/components/aicoach/AgentObservability';
-import { NetworkGraph } from '@/components/aicoach/NetworkGraph';
+import { AgentNetworkGraph } from '@/components/aicoach/AgentNetworkGraph';
 import { InterAgentChat } from '@/components/aicoach/InterAgentChat';
 
 const COACH_MODES = ['Coach', 'Planner', 'Motivator', 'Analyst'] as const;
@@ -152,7 +152,7 @@ export default function AiCoach() {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 bg-card rounded-xl border border-border p-4 max-h-[60vh]">
-        {graphData && <NetworkGraph data={graphData} />}
+        {graphData && <AgentNetworkGraph data={graphData} onIntervene={intervene} />}
         {internalLogs.length > 0 && <InterAgentChat logs={internalLogs} />}
         
         <AgentObservability 
