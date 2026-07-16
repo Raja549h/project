@@ -13,6 +13,8 @@ export function useAgentStream() {
   const [isPaused, setIsPaused] = useState(false);
   const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [graphData, setGraphData] = useState<any>(null);
+  const [internalLogs, setInternalLogs] = useState<{agent: string, message: string}[]>([]);
 
   const startStream = useCallback(async (prompt: string, executionMode: string = 'auto') => {
     setIsStreaming(true);
@@ -66,10 +68,25 @@ export function useAgentStream() {
               case 'task_resumed':
                 setIsPaused(false);
                 break;
+              case 'routing':
+                setInternalLogs(prev => [...prev, { agent: 'Meta-Router', message: `Routing to ${data.sub_tasks_count} tasks (Intent: ${data.intent}, Complexity: ${data.complexity})` }]);
+                break;
+              case 'worker_complete':
+                setInternalLogs(prev => [...prev, { agent: `Worker (${data.intent})`, message: `Task completed.` }]);
+                break;
+              case 'synthesizing':
+                setInternalLogs(prev => [...prev, { agent: 'Synthesizer', message: `Aggregating results...` }]);
+                break;
+              case 'evaluation':
+                setInternalLogs(prev => [...prev, { agent: 'Constitutional Council', message: `Evaluation complete (Score: ${data.score}/10, Pass: ${data.pass})` }]);
+                break;
               case 'plan_overridden':
                 setIsPaused(false);
-                // Reset UI state for replan
                 setPendingActions([]);
+                setInternalLogs(prev => [...prev, { agent: 'System', message: 'Plan overridden by user. Forcing replan...' }]);
+                break;
+              case 'graph_update':
+                setGraphData(data);
                 break;
               case 'final_response':
                 assistantMsg = data.response;
@@ -132,5 +149,5 @@ export function useAgentStream() {
     }
   }, [currentSessionId]);
 
-  return { messages, isStreaming, isPaused, pendingActions, startStream, approveActions, intervene };
+  return { messages, isStreaming, isPaused, pendingActions, graphData, internalLogs, startStream, approveActions, intervene };
 }

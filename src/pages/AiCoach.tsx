@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { useAgentStream } from '@/hooks/useAgentStream';
 import { AgentObservability } from '@/components/aicoach/AgentObservability';
+import { NetworkGraph } from '@/components/aicoach/NetworkGraph';
+import { InterAgentChat } from '@/components/aicoach/InterAgentChat';
 
 const COACH_MODES = ['Coach', 'Planner', 'Motivator', 'Analyst'] as const;
 
@@ -72,7 +74,17 @@ export default function AiCoach() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const { messages: streamMessages, isStreaming, isPaused, pendingActions, startStream, approveActions, intervene } = useAgentStream();
+  const { 
+    messages: streamMessages, 
+    isStreaming, 
+    isPaused, 
+    pendingActions, 
+    graphData,
+    internalLogs,
+    startStream, 
+    approveActions, 
+    intervene 
+  } = useAgentStream();
 
   const handleSend = async () => {
     if (!input.trim() || isStreaming) return;
@@ -140,6 +152,9 @@ export default function AiCoach() {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-3 bg-card rounded-xl border border-border p-4 max-h-[60vh]">
+        {graphData && <NetworkGraph data={graphData} />}
+        {internalLogs.length > 0 && <InterAgentChat logs={internalLogs} />}
+        
         <AgentObservability 
           isStreaming={isStreaming} 
           isPaused={isPaused} 
